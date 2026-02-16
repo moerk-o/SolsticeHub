@@ -11,14 +11,14 @@
       },
       "base_data": {
         "title": "Basisdaten Einstellungen",
-        "description": "Konfiguriere Basisdaten für '{name}'",
+        "description": "Konfiguriere Basisdaten für {name}",
         "data": {
           "hemisphere": "Hemisphäre"
         }
       },
       "four_seasons": {
         "title": "Vier Jahreszeiten Einstellungen",
-        "description": "Konfiguriere den Vier Jahreszeiten Kalender für '{name}'",
+        "description": "Konfiguriere den Vier Jahreszeiten Kalender für {name}",
         "data": {
           "hemisphere": "Hemisphäre",
           "mode": "Berechnungsmodus"
@@ -26,7 +26,7 @@
       },
       "cross_quarter": {
         "title": "Cross-Quarter / Keltisch Einstellungen",
-        "description": "Konfiguriere den Cross-Quarter Kalender für '{name}'",
+        "description": "Konfiguriere den Cross-Quarter Kalender für {name}",
         "data": {
           "mode": "Berechnungsmodus",
           "naming": "Benennung"
@@ -34,7 +34,7 @@
       },
       "chinese": {
         "title": "Chinesische Sonnenterme Einstellungen",
-        "description": "Konfiguriere den chinesischen Sonnenterme-Kalender für '{name}'",
+        "description": "Konfiguriere den chinesischen Sonnenterme-Kalender für {name}",
         "data": {
           "scope": "Umfang",
           "naming": "Benennung"

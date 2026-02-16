@@ -11,14 +11,14 @@
       },
       "base_data": {
         "title": "Basisgegevens Instellingen",
-        "description": "Configureer Basisgegevens voor '{name}'",
+        "description": "Configureer Basisgegevens voor {name}",
         "data": {
           "hemisphere": "Halfrond"
         }
       },
       "four_seasons": {
         "title": "Vier Seizoenen Instellingen",
-        "description": "Configureer de Vier Seizoenen kalender voor '{name}'",
+        "description": "Configureer de Vier Seizoenen kalender voor {name}",
         "data": {
           "hemisphere": "Halfrond",
           "mode": "Berekeningsmodus"
@@ -26,7 +26,7 @@
       },
       "cross_quarter": {
         "title": "Cross-Quarter / Keltisch Instellingen",
-        "description": "Configureer de Cross-Quarter kalender voor '{name}'",
+        "description": "Configureer de Cross-Quarter kalender voor {name}",
         "data": {
           "mode": "Berekeningsmodus",
           "naming": "Naamstijl"
@@ -34,7 +34,7 @@
       },
       "chinese": {
         "title": "Chinese Zonnetermijnen Instellingen",
-        "description": "Configureer de Chinese Zonnetermijnen kalender voor '{name}'",
+        "description": "Configureer de Chinese Zonnetermijnen kalender voor {name}",
         "data": {
           "scope": "Omvang",
           "naming": "Naamstijl"
