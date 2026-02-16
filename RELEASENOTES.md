@@ -1,3 +1,19 @@
+### 🐞 Bug Fixes
+
+- **Fixed daylight trend for southern hemisphere** ([#8](https://github.com/moerk-o/ha-solstice_season/issues/8))
+  - The `daylight_trend` sensor now correctly shows "days getting shorter" after the summer solstice in the southern hemisphere
+  - Previously, the sensor showed the northern hemisphere perspective regardless of configuration
+
+### 🔮 v2.0 is coming!
+
+The next major version will include breaking changes, support for new calendar systems, and a new name for the integration.
+
+**Get ready for SolsticeHub!**
+
+**Full Changelog**: https://github.com/moerk-o/ha-solstice_season/compare/v1.5.0...v1.5.1
+
+---
+
 # v1.5.0
 
 ### ✨ New Features
