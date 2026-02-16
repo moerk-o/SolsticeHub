@@ -6,7 +6,14 @@
         "description": "Stel een op de zon gebaseerd kalendersysteem in",
         "data": {
           "name": "Naam",
-          "calendar_type": "Kalendertype"
+          "device_type": "Apparaattype"
+        }
+      },
+      "base_data": {
+        "title": "Basisgegevens Instellingen",
+        "description": "Configureer Basisgegevens voor '{name}'",
+        "data": {
+          "hemisphere": "Halfrond"
         }
       },
       "four_seasons": {
@@ -42,8 +49,9 @@
     }
   },
   "selector": {
-    "calendar_type": {
+    "device_type": {
       "options": {
+        "base_data": "Basisgegevens",
         "four_seasons": "Vier Seizoenen",
         "cross_quarter": "Cross-Quarter / Keltisch",
         "chinese": "Chinese Zonnetermijnen"
@@ -174,15 +182,6 @@
       },
       "next_term_change": {
         "name": "Volgende Termwisseling"
-      }
-    },
-    "select": {
-      "hemisphere": {
-        "name": "Halfrond",
-        "state": {
-          "northern": "Noordelijk halfrond",
-          "southern": "Zuidelijk halfrond"
-        }
       }
     }
   }
