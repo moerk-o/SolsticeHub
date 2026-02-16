@@ -15,8 +15,22 @@ from .const import CONF_HEMISPHERE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# Update once per day
-UPDATE_INTERVAL = timedelta(days=1)
+
+def _calculate_time_until_midnight() -> timedelta:
+    """Calculate time until next local midnight.
+
+    Returns:
+        Timedelta until next midnight (minimum 1 minute to prevent rapid updates).
+    """
+    now = dt_util.now()  # Local time
+    next_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+    time_until = next_midnight - now
+
+    # Ensure minimum interval of 1 minute to prevent rapid updates
+    if time_until < timedelta(minutes=1):
+        time_until = timedelta(days=1)
+
+    return time_until
 
 
 class BaseDataCoordinator(DataUpdateCoordinator[BaseData]):
@@ -25,6 +39,8 @@ class BaseDataCoordinator(DataUpdateCoordinator[BaseData]):
     This coordinator manages data updates for the Base Data sensors:
     - solar_longitude: Ecliptic longitude of the Sun (hemisphere-independent)
     - daylight_trend: Whether days are getting longer or shorter (hemisphere-dependent)
+
+    Updates occur at local midnight for clean day transitions.
     """
 
     config_entry: ConfigEntry
@@ -40,7 +56,7 @@ class BaseDataCoordinator(DataUpdateCoordinator[BaseData]):
             hass,
             _LOGGER,
             name=f"{DOMAIN}_base_data",
-            update_interval=UPDATE_INTERVAL,
+            update_interval=_calculate_time_until_midnight(),
         )
         self.config_entry = config_entry
         self.hemisphere: str = config_entry.data[CONF_HEMISPHERE]
@@ -48,17 +64,21 @@ class BaseDataCoordinator(DataUpdateCoordinator[BaseData]):
     async def _async_update_data(self) -> BaseData:
         """Fetch data from calculations.
 
-        This method is called by the coordinator at the configured interval.
+        This method is called by the coordinator at local midnight.
         It runs the calculation in an executor to avoid blocking the event loop.
 
         Returns:
             Dictionary containing all calculated base data.
         """
+        # Schedule next update for midnight
+        self.update_interval = _calculate_time_until_midnight()
+
         now = dt_util.utcnow()
         _LOGGER.debug(
-            "Updating Base Data for %s (hemisphere=%s)",
+            "Updating Base Data for %s (hemisphere=%s), next update in %s",
             self.config_entry.title,
             self.hemisphere,
+            self.update_interval,
         )
 
         # Run calculation in executor as it may be CPU-intensive

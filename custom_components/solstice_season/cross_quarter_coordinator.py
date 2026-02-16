@@ -15,15 +15,29 @@ from .const import CONF_MODE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# Update once per day
-UPDATE_INTERVAL = timedelta(days=1)
+
+def _calculate_time_until_midnight() -> timedelta:
+    """Calculate time until next local midnight.
+
+    Returns:
+        Timedelta until next midnight (minimum 1 minute to prevent rapid updates).
+    """
+    now = dt_util.now()  # Local time
+    next_midnight = now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+    time_until = next_midnight - now
+
+    # Ensure minimum interval of 1 minute to prevent rapid updates
+    if time_until < timedelta(minutes=1):
+        time_until = timedelta(days=1)
+
+    return time_until
 
 
 class CrossQuarterCoordinator(DataUpdateCoordinator[CrossQuarterData]):
     """Coordinator for Cross-Quarter calendar data.
 
     This coordinator manages data updates for all Cross-Quarter sensors.
-    It calculates all Cross-Quarter-related data once per day.
+    Updates occur at local midnight for clean day transitions.
     """
 
     config_entry: ConfigEntry
@@ -39,7 +53,7 @@ class CrossQuarterCoordinator(DataUpdateCoordinator[CrossQuarterData]):
             hass,
             _LOGGER,
             name=f"{DOMAIN}_cross_quarter",
-            update_interval=UPDATE_INTERVAL,
+            update_interval=_calculate_time_until_midnight(),
         )
         self.config_entry = config_entry
         self.mode: str = config_entry.data[CONF_MODE]
@@ -47,17 +61,21 @@ class CrossQuarterCoordinator(DataUpdateCoordinator[CrossQuarterData]):
     async def _async_update_data(self) -> CrossQuarterData:
         """Fetch data from calculations.
 
-        This method is called by the coordinator at the configured interval.
+        This method is called by the coordinator at local midnight.
         It runs the calculation in an executor to avoid blocking the event loop.
 
         Returns:
             Dictionary containing all calculated Cross-Quarter data.
         """
+        # Schedule next update for midnight
+        self.update_interval = _calculate_time_until_midnight()
+
         now = dt_util.utcnow()
         _LOGGER.debug(
-            "Updating Cross-Quarter data for %s (mode=%s)",
+            "Updating Cross-Quarter data for %s (mode=%s), next update in %s",
             self.config_entry.title,
             self.mode,
+            self.update_interval,
         )
 
         # Run calculation in executor as it may be CPU-intensive
