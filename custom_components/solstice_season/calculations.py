@@ -7,7 +7,7 @@ to allow for easier testing and maintenance.
 Uses the ephem library for precise astronomical calculations.
 """
 
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import TypedDict
 
 import ephem
@@ -33,6 +33,16 @@ class AstronomicalEvents(TypedDict):
     june_solstice: datetime
     september_equinox: datetime
     december_solstice: datetime
+
+
+class BaseData(TypedDict):
+    """Type definition for base device sensor data (global/shared)."""
+
+    solar_longitude: float
+    daylight_trend: str
+    next_trend_change: datetime
+    days_until_trend_change: int
+    next_trend_event_type: str
 
 
 class SeasonData(TypedDict):
@@ -104,6 +114,37 @@ def _ephem_date_to_datetime(ephem_date: ephem.Date) -> datetime:
         A timezone-aware datetime in UTC.
     """
     return ephem_date.datetime().replace(tzinfo=timezone.utc)
+
+
+def calculate_solar_longitude(now: datetime) -> float:
+    """Calculate the ecliptic longitude of the Sun.
+
+    The ecliptic longitude is the angular position of the Sun along
+    the ecliptic plane, measured from the vernal equinox point (0°).
+
+    Reference points:
+    - 0° = Vernal (March) Equinox
+    - 90° = Summer (June) Solstice
+    - 180° = Autumnal (September) Equinox
+    - 270° = Winter (December) Solstice
+
+    Args:
+        now: Current datetime in UTC.
+
+    Returns:
+        Solar longitude in degrees (0.0 - 359.9), rounded to 1 decimal place.
+    """
+    sun = ephem.Sun()
+    sun.compute(ephem.Date(now))
+
+    # Get ecliptic longitude in radians and convert to degrees
+    # ephem uses radians for hlon (heliocentric ecliptic longitude)
+    longitude_rad = float(ephem.Ecliptic(sun).lon)
+    longitude_deg = longitude_rad * 180.0 / 3.14159265358979
+
+    # Normalize to 0-360 range and round to 1 decimal place
+    longitude_deg = longitude_deg % 360.0
+    return round(longitude_deg, 1)
 
 
 def get_astronomical_events(year: int) -> AstronomicalEvents:
@@ -495,8 +536,8 @@ def calculate_season_data(hemisphere: str, mode: str, now: datetime) -> SeasonDa
         astronomical_events["december_solstice"],
     )
 
-    # Apply hemisphere correction to daylight trend
-    # The base calculation assumes northern hemisphere perspective
+    # Apply hemisphere interpretation to daylight trend
+    # The base calculation gives trend for northern hemisphere
     # For southern hemisphere, the interpretation is reversed
     if hemisphere == HEMISPHERE_SOUTHERN:
         if daylight_trend == TREND_LONGER:
@@ -542,4 +583,596 @@ def calculate_season_data(hemisphere: str, mode: str, now: datetime) -> SeasonDa
         next_season_change=next_season_change,
         next_season_change_event_type=next_season_change_event_type,
         days_until_season_change=days_until_season_change,
+    )
+
+
+def calculate_base_data(hemisphere: str, now: datetime) -> BaseData:
+    """Calculate data for the Base Device sensors.
+
+    This includes hemisphere-independent astronomical data (solar_longitude)
+    and hemisphere-dependent interpretation (daylight_trend).
+
+    The Base Device sensors are shared across all calendar instances and
+    are created once when the first calendar is added.
+
+    Args:
+        hemisphere: Either 'northern' or 'southern' for daylight trend interpretation.
+        now: Current datetime in UTC.
+
+    Returns:
+        Dictionary containing all base device sensor data.
+    """
+    year = now.year
+    today = now.date()
+
+    # Calculate solar longitude (global, hemisphere-independent)
+    solar_longitude = calculate_solar_longitude(now)
+
+    # Get astronomical events for daylight trend calculation
+    astronomical_events = get_astronomical_events(year)
+    astronomical_events_next = get_astronomical_events(year + 1)
+
+    # Daylight trend (interpretation depends on hemisphere)
+    daylight_trend = calculate_daylight_trend(
+        now,
+        astronomical_events["june_solstice"],
+        astronomical_events["december_solstice"],
+    )
+
+    # Apply hemisphere interpretation to daylight trend
+    # The base calculation gives trend for northern hemisphere
+    # For southern hemisphere, the interpretation is reversed
+    if hemisphere == HEMISPHERE_SOUTHERN:
+        if daylight_trend == TREND_LONGER:
+            daylight_trend = TREND_SHORTER
+        elif daylight_trend == TREND_SHORTER:
+            daylight_trend = TREND_LONGER
+        # TREND_SOLSTICE stays the same
+
+    # Next daylight trend change (next solstice)
+    next_trend_change, next_trend_event_type = get_next_solstice(
+        hemisphere, now, astronomical_events, astronomical_events_next
+    )
+    days_until_trend_change = calculate_days_until(next_trend_change.date(), today)
+
+    return BaseData(
+        solar_longitude=solar_longitude,
+        daylight_trend=daylight_trend,
+        next_trend_change=next_trend_change,
+        days_until_trend_change=days_until_trend_change,
+        next_trend_event_type=next_trend_event_type,
+    )
+
+
+# =============================================================================
+# Cross-Quarter Calendar Calculations
+# =============================================================================
+
+# Cross-Quarter event names (Celtic names)
+CELTIC_IMBOLC = "imbolc"
+CELTIC_OSTARA = "ostara"
+CELTIC_BELTANE = "beltane"
+CELTIC_LITHA = "litha"
+CELTIC_LUGHNASADH = "lughnasadh"
+CELTIC_MABON = "mabon"
+CELTIC_SAMHAIN = "samhain"
+CELTIC_YULE = "yule"
+
+# Solar longitudes for Cross-Quarter events
+CROSS_QUARTER_LONGITUDES = {
+    CELTIC_OSTARA: 0,       # Spring Equinox
+    CELTIC_BELTANE: 45,     # Cross-Quarter
+    CELTIC_LITHA: 90,       # Summer Solstice
+    CELTIC_LUGHNASADH: 135, # Cross-Quarter
+    CELTIC_MABON: 180,      # Autumn Equinox
+    CELTIC_SAMHAIN: 225,    # Cross-Quarter
+    CELTIC_YULE: 270,       # Winter Solstice
+    CELTIC_IMBOLC: 315,     # Cross-Quarter
+}
+
+# Traditional fixed dates for Cross-Quarter events (month, day)
+TRADITIONAL_CROSS_QUARTER_DATES = {
+    CELTIC_IMBOLC: (2, 1),      # February 1
+    CELTIC_OSTARA: None,       # Use astronomical calculation
+    CELTIC_BELTANE: (5, 1),     # May 1
+    CELTIC_LITHA: None,        # Use astronomical calculation
+    CELTIC_LUGHNASADH: (8, 1),  # August 1
+    CELTIC_MABON: None,        # Use astronomical calculation
+    CELTIC_SAMHAIN: (11, 1),    # November 1
+    CELTIC_YULE: None,         # Use astronomical calculation
+}
+
+# Order of Cross-Quarter events through the year (starting from Yule)
+CROSS_QUARTER_ORDER = [
+    CELTIC_YULE,        # ~Dec 21 (270°)
+    CELTIC_IMBOLC,      # ~Feb 4 (315°)
+    CELTIC_OSTARA,      # ~Mar 20 (0°)
+    CELTIC_BELTANE,     # ~May 5 (45°)
+    CELTIC_LITHA,       # ~Jun 21 (90°)
+    CELTIC_LUGHNASADH,  # ~Aug 7 (135°)
+    CELTIC_MABON,       # ~Sep 22 (180°)
+    CELTIC_SAMHAIN,     # ~Nov 7 (225°)
+]
+
+
+class CrossQuarterEvents(TypedDict):
+    """Type definition for Cross-Quarter events."""
+
+    imbolc: datetime
+    ostara: datetime
+    beltane: datetime
+    litha: datetime
+    lughnasadh: datetime
+    mabon: datetime
+    samhain: datetime
+    yule: datetime
+
+
+class CrossQuarterData(TypedDict):
+    """Type definition for Cross-Quarter calendar sensor data."""
+
+    current_period: str
+    period_age: int
+    next_period_change: datetime
+    next_period_event_type: str
+    days_until_next_change: int
+    events: dict[str, datetime]
+
+
+def find_date_for_solar_longitude(target_longitude: float, year: int) -> datetime:
+    """Find the date when the Sun reaches a specific ecliptic longitude.
+
+    Uses binary search to find the precise moment when the Sun's
+    ecliptic longitude equals the target value.
+
+    Args:
+        target_longitude: Target solar longitude in degrees (0-360).
+        year: The year to search in.
+
+    Returns:
+        UTC datetime when the Sun reaches the target longitude.
+    """
+    import math
+
+    # Estimate starting point based on longitude
+    # 0° is around March 20, so offset accordingly
+    day_of_year = int((target_longitude / 360.0) * 365.25) + 80  # ~March 20 offset
+    if day_of_year > 365:
+        day_of_year -= 365
+
+    # Start date for search
+    start_date = datetime(year, 1, 1, tzinfo=timezone.utc)
+    estimated_date = start_date + timedelta(days=day_of_year - 1)
+
+    # Binary search with a range of ±15 days
+    low = estimated_date - timedelta(days=15)
+    high = estimated_date + timedelta(days=15)
+
+    # Iterate to find precise moment (within 1 minute accuracy)
+    for _ in range(20):  # Max 20 iterations
+        mid = low + (high - low) / 2
+        current_longitude = calculate_solar_longitude(mid)
+
+        # Handle wrap-around at 0°/360°
+        diff = (current_longitude - target_longitude + 180) % 360 - 180
+
+        if abs(diff) < 0.01:  # Close enough (about 15 minutes)
+            return mid
+        elif diff > 0:
+            high = mid
+        else:
+            low = mid
+
+    return low + (high - low) / 2
+
+
+def get_cross_quarter_events_astronomical(year: int) -> CrossQuarterEvents:
+    """Get all Cross-Quarter events for a year using astronomical calculation.
+
+    Calculates the exact moments when the Sun reaches the ecliptic
+    longitudes for each Cross-Quarter event.
+
+    Args:
+        year: The year to calculate events for.
+
+    Returns:
+        Dictionary containing all eight Cross-Quarter events with UTC datetimes.
+    """
+    # Get the four main events from existing calculation
+    astro_events = get_astronomical_events(year)
+
+    events = CrossQuarterEvents(
+        ostara=astro_events["march_equinox"],
+        litha=astro_events["june_solstice"],
+        mabon=astro_events["september_equinox"],
+        yule=astro_events["december_solstice"],
+        # Calculate cross-quarter points
+        imbolc=find_date_for_solar_longitude(315, year),
+        beltane=find_date_for_solar_longitude(45, year),
+        lughnasadh=find_date_for_solar_longitude(135, year),
+        samhain=find_date_for_solar_longitude(225, year),
+    )
+
+    return events
+
+
+def get_cross_quarter_events_traditional(year: int) -> CrossQuarterEvents:
+    """Get all Cross-Quarter events for a year using traditional fixed dates.
+
+    Uses the traditional Celtic festival dates for cross-quarter days
+    and astronomical calculation for solstices/equinoxes.
+
+    Args:
+        year: The year to calculate events for.
+
+    Returns:
+        Dictionary containing all eight Cross-Quarter events with UTC datetimes.
+    """
+    # Get the four main events from existing calculation
+    astro_events = get_astronomical_events(year)
+
+    # Traditional dates are at midnight UTC
+    events = CrossQuarterEvents(
+        ostara=astro_events["march_equinox"],
+        litha=astro_events["june_solstice"],
+        mabon=astro_events["september_equinox"],
+        yule=astro_events["december_solstice"],
+        # Traditional fixed dates
+        imbolc=datetime(year, 2, 1, 0, 0, 0, tzinfo=timezone.utc),
+        beltane=datetime(year, 5, 1, 0, 0, 0, tzinfo=timezone.utc),
+        lughnasadh=datetime(year, 8, 1, 0, 0, 0, tzinfo=timezone.utc),
+        samhain=datetime(year, 11, 1, 0, 0, 0, tzinfo=timezone.utc),
+    )
+
+    return events
+
+
+def determine_current_celtic_period(
+    now: datetime, events: CrossQuarterEvents
+) -> tuple[str, datetime]:
+    """Determine the current Celtic period based on Cross-Quarter events.
+
+    Args:
+        now: Current datetime.
+        events: Cross-Quarter events for the current year.
+
+    Returns:
+        Tuple of (current period name, start datetime of current period).
+    """
+    # Build list of (event_name, datetime) sorted by date
+    event_list = [
+        (CELTIC_YULE, events["yule"]),
+        (CELTIC_IMBOLC, events["imbolc"]),
+        (CELTIC_OSTARA, events["ostara"]),
+        (CELTIC_BELTANE, events["beltane"]),
+        (CELTIC_LITHA, events["litha"]),
+        (CELTIC_LUGHNASADH, events["lughnasadh"]),
+        (CELTIC_MABON, events["mabon"]),
+        (CELTIC_SAMHAIN, events["samhain"]),
+    ]
+
+    # Sort by date
+    event_list.sort(key=lambda x: x[1])
+
+    # Find current period
+    current_period = CELTIC_YULE  # Default if before first event
+    period_start = events["yule"]
+
+    for event_name, event_date in event_list:
+        if now >= event_date:
+            current_period = event_name
+            period_start = event_date
+        else:
+            break
+
+    return current_period, period_start
+
+
+def get_next_cross_quarter_event(
+    now: datetime,
+    current_year_events: CrossQuarterEvents,
+    next_year_events: CrossQuarterEvents,
+) -> tuple[datetime, str]:
+    """Get the next Cross-Quarter event.
+
+    Args:
+        now: Current datetime.
+        current_year_events: Events for the current year.
+        next_year_events: Events for the next year.
+
+    Returns:
+        Tuple of (next event datetime, event name).
+    """
+    # Build sorted list of all events
+    events_list = []
+    for event_name in CROSS_QUARTER_ORDER:
+        events_list.append((event_name, current_year_events[event_name]))
+        events_list.append((event_name, next_year_events[event_name]))
+
+    # Sort by date
+    events_list.sort(key=lambda x: x[1])
+
+    # Find next event
+    for event_name, event_date in events_list:
+        if event_date > now:
+            return event_date, event_name
+
+    # Fallback (should never happen)
+    return next_year_events["yule"], CELTIC_YULE
+
+
+def calculate_cross_quarter_data(
+    mode: str,
+    now: datetime,
+) -> CrossQuarterData:
+    """Calculate data for Cross-Quarter calendar sensors.
+
+    Args:
+        mode: Either 'astronomical' or 'traditional'.
+        now: Current datetime in UTC.
+
+    Returns:
+        Dictionary containing all Cross-Quarter calendar sensor data.
+    """
+    year = now.year
+    today = now.date()
+
+    # Get events based on mode
+    if mode == MODE_ASTRONOMICAL:
+        current_events = get_cross_quarter_events_astronomical(year)
+        next_events = get_cross_quarter_events_astronomical(year + 1)
+        prev_events = get_cross_quarter_events_astronomical(year - 1)
+    else:  # traditional
+        current_events = get_cross_quarter_events_traditional(year)
+        next_events = get_cross_quarter_events_traditional(year + 1)
+        prev_events = get_cross_quarter_events_traditional(year - 1)
+
+    # Determine current period
+    current_period, period_start = determine_current_celtic_period(now, current_events)
+
+    # If we're before the first event of the year, check previous year
+    if period_start > now:
+        current_period, period_start = determine_current_celtic_period(now, prev_events)
+
+    # Calculate period age
+    period_age = (today - period_start.date()).days
+
+    # Get next event
+    next_change, next_event_type = get_next_cross_quarter_event(
+        now, current_events, next_events
+    )
+    days_until_next = calculate_days_until(next_change.date(), today)
+
+    # Build events dict with next occurrences
+    events_dict = {}
+    for event_name in CROSS_QUARTER_ORDER:
+        event_date = current_events[event_name]
+        if event_date <= now:
+            event_date = next_events[event_name]
+        events_dict[event_name] = event_date
+
+    return CrossQuarterData(
+        current_period=current_period,
+        period_age=period_age,
+        next_period_change=next_change,
+        next_period_event_type=next_event_type,
+        days_until_next_change=days_until_next,
+        events=events_dict,
+    )
+
+
+# =============================================================================
+# Chinese Solar Terms Calendar
+# =============================================================================
+
+# Chinese Solar Terms - 24 terms at 15° intervals
+# Starting from Xiaohan (Minor Cold) at 285° which is around January 6
+CHINESE_SOLAR_TERMS: list[tuple[str, float]] = [
+    ("xiaohan", 285.0),      # Minor Cold - ~Jan 6
+    ("dahan", 300.0),        # Major Cold - ~Jan 20
+    ("lichun", 315.0),       # Start of Spring - ~Feb 4
+    ("yushui", 330.0),       # Rain Water - ~Feb 19
+    ("jingzhe", 345.0),      # Awakening of Insects - ~Mar 6
+    ("chunfen", 0.0),        # Spring Equinox - ~Mar 21
+    ("qingming", 15.0),      # Clear and Bright - ~Apr 5
+    ("guyu", 30.0),          # Grain Rain - ~Apr 20
+    ("lixia", 45.0),         # Start of Summer - ~May 6
+    ("xiaoman", 60.0),       # Grain Buds - ~May 21
+    ("mangzhong", 75.0),     # Grain in Ear - ~Jun 6
+    ("xiazhi", 90.0),        # Summer Solstice - ~Jun 21
+    ("xiaoshu", 105.0),      # Minor Heat - ~Jul 7
+    ("dashu", 120.0),        # Major Heat - ~Jul 23
+    ("liqiu", 135.0),        # Start of Autumn - ~Aug 8
+    ("chushu", 150.0),       # End of Heat - ~Aug 23
+    ("bailu", 165.0),        # White Dew - ~Sep 8
+    ("qiufen", 180.0),       # Autumn Equinox - ~Sep 23
+    ("hanlu", 195.0),        # Cold Dew - ~Oct 8
+    ("shuangjiang", 210.0),  # Frost's Descent - ~Oct 24
+    ("lidong", 225.0),       # Start of Winter - ~Nov 8
+    ("xiaoxue", 240.0),      # Minor Snow - ~Nov 22
+    ("daxue", 255.0),        # Major Snow - ~Dec 7
+    ("dongzhi", 270.0),      # Winter Solstice - ~Dec 22
+]
+
+# 8 Major Solar Terms (the seasonal markers)
+CHINESE_MAJOR_TERMS: list[str] = [
+    "lichun",    # Start of Spring - 315°
+    "chunfen",   # Spring Equinox - 0°
+    "lixia",     # Start of Summer - 45°
+    "xiazhi",    # Summer Solstice - 90°
+    "liqiu",     # Start of Autumn - 135°
+    "qiufen",    # Autumn Equinox - 180°
+    "lidong",    # Start of Winter - 225°
+    "dongzhi",   # Winter Solstice - 270°
+]
+
+# All term names in order for iteration
+CHINESE_TERM_NAMES: list[str] = [term[0] for term in CHINESE_SOLAR_TERMS]
+
+# Map from term name to solar longitude
+CHINESE_TERM_LONGITUDES: dict[str, float] = {
+    term[0]: term[1] for term in CHINESE_SOLAR_TERMS
+}
+
+
+class ChineseSolarTermsEvents(TypedDict):
+    """Type definition for Chinese Solar Terms events."""
+
+    xiaohan: datetime
+    dahan: datetime
+    lichun: datetime
+    yushui: datetime
+    jingzhe: datetime
+    chunfen: datetime
+    qingming: datetime
+    guyu: datetime
+    lixia: datetime
+    xiaoman: datetime
+    mangzhong: datetime
+    xiazhi: datetime
+    xiaoshu: datetime
+    dashu: datetime
+    liqiu: datetime
+    chushu: datetime
+    bailu: datetime
+    qiufen: datetime
+    hanlu: datetime
+    shuangjiang: datetime
+    lidong: datetime
+    xiaoxue: datetime
+    daxue: datetime
+    dongzhi: datetime
+
+
+class ChineseSolarTermsData(TypedDict):
+    """Type definition for Chinese Solar Terms calendar sensor data."""
+
+    current_term: str
+    term_age: int
+    next_term_change: datetime
+    next_term_event_type: str
+    days_until_next_change: int
+    events: dict[str, datetime]
+
+
+def get_chinese_solar_terms_events(year: int) -> dict[str, datetime]:
+    """Get all Chinese Solar Terms events for a year.
+
+    Args:
+        year: The year to calculate events for.
+
+    Returns:
+        Dictionary containing all 24 solar terms with UTC datetimes.
+    """
+    events: dict[str, datetime] = {}
+
+    for term_name, longitude in CHINESE_SOLAR_TERMS:
+        events[term_name] = find_date_for_solar_longitude(longitude, year)
+
+    return events
+
+
+def get_chinese_major_terms_events(year: int) -> dict[str, datetime]:
+    """Get the 8 major Chinese Solar Terms events for a year.
+
+    Args:
+        year: The year to calculate events for.
+
+    Returns:
+        Dictionary containing the 8 major solar terms with UTC datetimes.
+    """
+    events: dict[str, datetime] = {}
+
+    for term_name in CHINESE_MAJOR_TERMS:
+        longitude = CHINESE_TERM_LONGITUDES[term_name]
+        events[term_name] = find_date_for_solar_longitude(longitude, year)
+
+    return events
+
+
+def calculate_chinese_solar_terms_data(
+    scope: str,
+    now: datetime,
+) -> ChineseSolarTermsData:
+    """Calculate data for Chinese Solar Terms calendar sensors.
+
+    Args:
+        scope: Either 'all_24' for all terms or '8_major' for major terms only.
+        now: Current datetime in UTC.
+
+    Returns:
+        Dictionary containing all calculated Chinese Solar Terms data.
+    """
+    year = now.year
+
+    # Get term list based on scope
+    if scope == "8_major":
+        term_list = CHINESE_MAJOR_TERMS
+        current_events = get_chinese_major_terms_events(year)
+        next_events = get_chinese_major_terms_events(year + 1)
+    else:
+        term_list = CHINESE_TERM_NAMES
+        current_events = get_chinese_solar_terms_events(year)
+        next_events = get_chinese_solar_terms_events(year + 1)
+
+    # Build sorted list of all events for the year and next
+    all_events: list[tuple[str, datetime]] = []
+    for term_name in term_list:
+        all_events.append((term_name, current_events[term_name]))
+        all_events.append((term_name, next_events[term_name]))
+
+    # Sort by datetime
+    all_events.sort(key=lambda x: x[1])
+
+    # Find current term
+    current_term = term_list[-1]  # Default to last term
+    current_term_start = current_events[term_list[-1]]
+
+    for i, (term_name, event_date) in enumerate(all_events):
+        if event_date > now:
+            # The previous event is the current term
+            if i > 0:
+                current_term = all_events[i - 1][0]
+                current_term_start = all_events[i - 1][1]
+            break
+    else:
+        # now is after all events
+        current_term = all_events[-1][0]
+        current_term_start = all_events[-1][1]
+
+    # Calculate term age
+    term_age = (now - current_term_start).days
+
+    # Find next term change
+    next_change = None
+    next_event_type = term_list[0]
+
+    for term_name, event_date in all_events:
+        if event_date > now:
+            next_change = event_date
+            next_event_type = term_name
+            break
+
+    if next_change is None:
+        # Should not happen, but fallback to next year's first term
+        next_change = next_events[term_list[0]]
+        next_event_type = term_list[0]
+
+    days_until_next = (next_change - now).days
+
+    # Build events dict with next occurrences (rolling)
+    events_dict: dict[str, datetime] = {}
+    for term_name in term_list:
+        event_date = current_events[term_name]
+        if event_date <= now:
+            event_date = next_events[term_name]
+        events_dict[term_name] = event_date
+
+    return ChineseSolarTermsData(
+        current_term=current_term,
+        term_age=term_age,
+        next_term_change=next_change,
+        next_term_event_type=next_event_type,
+        days_until_next_change=days_until_next,
+        events=events_dict,
     )

@@ -1,8 +1,14 @@
 """The Solstice Season integration.
 
 This integration provides precise, daily seasonal information as sensors
-in Home Assistant. It calculates astronomical events (solstices and equinoxes)
-and provides a daylight trend sensor.
+in Home Assistant. It calculates astronomical events and provides various
+calendar-based sensors.
+
+v2.0 Architecture:
+- Each config entry creates one device with its own coordinator
+- Device types: Base Data, Four Seasons, Cross-Quarter, Chinese Solar Terms
+- No shared state between devices
+- Hemisphere is fixed after configuration (no runtime changes)
 """
 
 from __future__ import annotations
@@ -13,8 +19,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .base_data_coordinator import BaseDataCoordinator
+from .chinese_coordinator import ChineseSolarTermsCoordinator
+from .const import (
+    CONF_DEVICE_TYPE,
+    DEVICE_BASE_DATA,
+    DEVICE_CHINESE,
+    DEVICE_CROSS_QUARTER,
+    DEVICE_FOUR_SEASONS,
+    DOMAIN,
+)
 from .coordinator import SolsticeSeasonCoordinator
+from .cross_quarter_coordinator import CrossQuarterCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,6 +39,9 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Solstice Season from a config entry.
+
+    Each config entry creates one device with its own coordinator.
+    The device type determines which coordinator and sensors are created.
 
     Args:
         hass: Home Assistant instance.
@@ -33,15 +52,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """
     _LOGGER.debug("Setting up Solstice Season integration: %s", entry.title)
 
-    # Create coordinator
-    coordinator = SolsticeSeasonCoordinator(hass, entry)
+    # Get device type (default to four_seasons for backward compatibility)
+    device_type = entry.data.get(CONF_DEVICE_TYPE, DEVICE_FOUR_SEASONS)
+    _LOGGER.debug("Device type: %s", device_type)
+
+    # Create coordinator based on device type
+    if device_type == DEVICE_BASE_DATA:
+        coordinator = BaseDataCoordinator(hass, entry)
+    elif device_type == DEVICE_CROSS_QUARTER:
+        coordinator = CrossQuarterCoordinator(hass, entry)
+    elif device_type == DEVICE_CHINESE:
+        coordinator = ChineseSolarTermsCoordinator(hass, entry)
+    else:
+        # Default to Four Seasons (also for backward compatibility)
+        coordinator = SolsticeSeasonCoordinator(hass, entry)
 
     # Fetch initial data
     await coordinator.async_config_entry_first_refresh()
 
-    # Store coordinator in hass.data
+    # Store coordinator in hass.data with device type info
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    hass.data[DOMAIN][entry.entry_id] = {
+        "coordinator": coordinator,
+        "device_type": device_type,
+    }
 
     # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -63,6 +97,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Unload platforms
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+        # Remove entry data
+        if entry.entry_id in hass.data[DOMAIN]:
+            hass.data[DOMAIN].pop(entry.entry_id)
+
+        # Clean up domain data if empty
+        if not hass.data[DOMAIN]:
+            hass.data.pop(DOMAIN)
 
     return unload_ok
