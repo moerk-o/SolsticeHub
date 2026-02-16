@@ -50,6 +50,7 @@ class SeasonData(TypedDict):
 
     current_season: str
     season_age: int
+    season_progress: float
     spring_equinox: datetime
     summer_solstice: datetime
     autumn_equinox: datetime
@@ -593,9 +594,16 @@ def calculate_season_data(hemisphere: str, mode: str, now: datetime) -> SeasonDa
     )
     season_age = (today - current_season_start.date()).days
 
+    # Calculate season progress as percentage (0.0 - 100.0)
+    season_duration = season_age + days_until_season_change
+    season_progress = (
+        round((season_age / season_duration) * 100, 1) if season_duration > 0 else 0.0
+    )
+
     return SeasonData(
         current_season=current_season,
         season_age=season_age,
+        season_progress=season_progress,
         spring_equinox=spring_event,
         summer_solstice=summer_event,
         autumn_equinox=autumn_event,

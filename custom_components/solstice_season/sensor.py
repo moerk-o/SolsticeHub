@@ -91,6 +91,7 @@ FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeSeasonSensorEntityDescription, .
         value_fn=lambda data: data["current_season"],
         extra_state_attributes_fn=lambda data: {
             "season_age": data["season_age"],
+            "season_progress": data["season_progress"],
         },
         icon_fn=get_current_season_icon,
     ),
