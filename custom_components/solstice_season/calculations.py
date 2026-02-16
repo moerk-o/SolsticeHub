@@ -58,6 +58,10 @@ class SeasonData(TypedDict):
     summer_solstice: datetime
     autumn_equinox: datetime
     winter_solstice: datetime
+    previous_spring_equinox: datetime
+    previous_summer_solstice: datetime
+    previous_autumn_equinox: datetime
+    previous_winter_solstice: datetime
     days_until_spring: int
     days_until_summer: int
     days_until_autumn: int
@@ -210,6 +214,29 @@ def get_next_event_date(
     if now < current_event:
         return current_event
     return next_year_events[event_name]
+
+
+def get_previous_event_date(
+    event_name: str,
+    current_year_events: AstronomicalEvents,
+    previous_year_events: AstronomicalEvents,
+    now: datetime,
+) -> datetime:
+    """Get the most recent past occurrence of an astronomical event.
+
+    Args:
+        event_name: Name of the event (march_equinox, june_solstice, etc.).
+        current_year_events: Events for the current year.
+        previous_year_events: Events for the previous year.
+        now: Current datetime.
+
+    Returns:
+        The most recent past occurrence of the event.
+    """
+    current_event = current_year_events[event_name]
+    if now >= current_event:
+        return current_event
+    return previous_year_events[event_name]
 
 
 def determine_current_season_astronomical(
@@ -518,6 +545,20 @@ def calculate_season_data(hemisphere: str, mode: str, now: datetime) -> SeasonDa
         mapping[SEASON_WINTER], current_events, next_events, now
     )
 
+    # Get previous (most recent past) events for last_start attribute
+    previous_spring_event = get_previous_event_date(
+        mapping[SEASON_SPRING], current_events, previous_events, now
+    )
+    previous_summer_event = get_previous_event_date(
+        mapping[SEASON_SUMMER], current_events, previous_events, now
+    )
+    previous_autumn_event = get_previous_event_date(
+        mapping[SEASON_AUTUMN], current_events, previous_events, now
+    )
+    previous_winter_event = get_previous_event_date(
+        mapping[SEASON_WINTER], current_events, previous_events, now
+    )
+
     today = now.date()
     days_until_spring = calculate_days_until(spring_event.date(), today)
     days_until_summer = calculate_days_until(summer_event.date(), today)
@@ -572,6 +613,10 @@ def calculate_season_data(hemisphere: str, mode: str, now: datetime) -> SeasonDa
         summer_solstice=summer_event,
         autumn_equinox=autumn_event,
         winter_solstice=winter_event,
+        previous_spring_equinox=previous_spring_event,
+        previous_summer_solstice=previous_summer_event,
+        previous_autumn_equinox=previous_autumn_event,
+        previous_winter_solstice=previous_winter_event,
         days_until_spring=days_until_spring,
         days_until_summer=days_until_summer,
         days_until_autumn=days_until_autumn,

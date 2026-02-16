@@ -106,6 +106,7 @@ FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeSeasonSensorEntityDescription, .
         value_fn=lambda data: data["spring_equinox"],
         extra_state_attributes_fn=lambda data: {
             "days_until": data["days_until_spring"],
+            "last_start": data["previous_spring_equinox"].date().isoformat(),
         },
     ),
     SolsticeSeasonSensorEntityDescription(
@@ -116,6 +117,7 @@ FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeSeasonSensorEntityDescription, .
         value_fn=lambda data: data["summer_solstice"],
         extra_state_attributes_fn=lambda data: {
             "days_until": data["days_until_summer"],
+            "last_start": data["previous_summer_solstice"].date().isoformat(),
         },
     ),
     SolsticeSeasonSensorEntityDescription(
@@ -126,6 +128,7 @@ FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeSeasonSensorEntityDescription, .
         value_fn=lambda data: data["autumn_equinox"],
         extra_state_attributes_fn=lambda data: {
             "days_until": data["days_until_autumn"],
+            "last_start": data["previous_autumn_equinox"].date().isoformat(),
         },
     ),
     SolsticeSeasonSensorEntityDescription(
@@ -136,6 +139,7 @@ FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeSeasonSensorEntityDescription, .
         value_fn=lambda data: data["winter_solstice"],
         extra_state_attributes_fn=lambda data: {
             "days_until": data["days_until_winter"],
+            "last_start": data["previous_winter_solstice"].date().isoformat(),
         },
     ),
     SolsticeSeasonSensorEntityDescription(
