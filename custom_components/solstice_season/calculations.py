@@ -50,10 +50,6 @@ class SeasonData(TypedDict):
 
     current_season: str
     season_age: int
-    spring_start: str
-    summer_start: str
-    autumn_start: str
-    winter_start: str
     spring_equinox: datetime
     summer_solstice: datetime
     autumn_equinox: datetime
@@ -565,11 +561,6 @@ def calculate_season_data(hemisphere: str, mode: str, now: datetime) -> SeasonDa
     days_until_autumn = calculate_days_until(autumn_event.date(), today)
     days_until_winter = calculate_days_until(winter_event.date(), today)
 
-    spring_start_event = current_events[mapping[SEASON_SPRING]]
-    summer_start_event = current_events[mapping[SEASON_SUMMER]]
-    autumn_start_event = current_events[mapping[SEASON_AUTUMN]]
-    winter_start_event = current_events[mapping[SEASON_WINTER]]
-
     # Daylight trend is always based on astronomical solstices (physical reality)
     daylight_trend = calculate_daylight_trend(
         now,
@@ -605,10 +596,6 @@ def calculate_season_data(hemisphere: str, mode: str, now: datetime) -> SeasonDa
     return SeasonData(
         current_season=current_season,
         season_age=season_age,
-        spring_start=spring_start_event.date().isoformat(),
-        summer_start=summer_start_event.date().isoformat(),
-        autumn_start=autumn_start_event.date().isoformat(),
-        winter_start=winter_start_event.date().isoformat(),
         spring_equinox=spring_event,
         summer_solstice=summer_event,
         autumn_equinox=autumn_event,

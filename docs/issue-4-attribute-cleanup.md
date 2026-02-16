@@ -81,7 +81,8 @@ Attribute:
 3. [x] Tests für `previous_*` Felder hinzufügen
 
 ### Teil 2: `*_start` Attribute entfernen (separater Commit)
-4. [ ] `sensor.py` - `*_start` Attribute von `current_season` entfernen
-5. [ ] `calculations.py` - Alte `*_start` Felder aus TypedDict entfernen
-6. [ ] Tests anpassen
-7. [ ] Issue #4 schließen
+4. [x] `sensor.py` - `*_start` Attribute von `current_season` entfernen
+5. [x] `calculations.py` - Alte `*_start` Felder aus TypedDict entfernen
+6. [x] Tests anpassen (keine Änderungen nötig - alle 42 Tests bestanden)
+7. [x] README.md aktualisiert
+8. [ ] Issue #4 schließen (via Commit)

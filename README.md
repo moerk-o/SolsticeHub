@@ -100,10 +100,6 @@ The integration creates **8 sensors**, all grouped under a single device:
 | `mode` | `astronomical` or `meteorological` |
 | `hemisphere` | `northern` or `southern` |
 | `season_age` | Days since the current season started |
-| `spring_start` | Start date of spring in current year |
-| `summer_start` | Start date of summer in current year |
-| `autumn_start` | Start date of autumn in current year |
-| `winter_start` | Start date of winter in current year |
 
 ### Equinox & Solstice Sensors
 
@@ -120,6 +116,7 @@ Each sensor has:
 - **State**: ISO 8601 timestamp (UTC)
 - **Device Class**: `timestamp`
 - **Attribute `days_until`**: Days remaining until the event (0 on the day itself)
+- **Attribute `last_start`**: Date of the most recent past occurrence (ISO date format)
 
 After an event occurs, the sensor automatically shows the next year's date.
 
