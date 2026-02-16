@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
+from collections.abc import Callable
+from datetime import datetime, timedelta
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
@@ -37,7 +39,7 @@ class CrossQuarterCoordinator(DataUpdateCoordinator[CrossQuarterData]):
     """Coordinator for Cross-Quarter calendar data.
 
     This coordinator manages data updates for all Cross-Quarter sensors.
-    Updates occur at local midnight for clean day transitions.
+    Updates occur at local midnight and at the exact moment of period changes.
     """
 
     config_entry: ConfigEntry
@@ -57,12 +59,13 @@ class CrossQuarterCoordinator(DataUpdateCoordinator[CrossQuarterData]):
         )
         self.config_entry = config_entry
         self.mode: str = config_entry.data[CONF_MODE]
+        self._unsub_event: Callable[[], None] | None = None
 
     async def _async_update_data(self) -> CrossQuarterData:
         """Fetch data from calculations.
 
-        This method is called by the coordinator at local midnight.
-        It runs the calculation in an executor to avoid blocking the event loop.
+        This method is called by the coordinator at local midnight and
+        at the exact moment of period changes.
 
         Returns:
             Dictionary containing all calculated Cross-Quarter data.
@@ -79,8 +82,54 @@ class CrossQuarterCoordinator(DataUpdateCoordinator[CrossQuarterData]):
         )
 
         # Run calculation in executor as it may be CPU-intensive
-        return await self.hass.async_add_executor_job(
+        data = await self.hass.async_add_executor_job(
             calculate_cross_quarter_data,
             self.mode,
             now,
         )
+
+        # Schedule event-based update for next period change
+        self._schedule_event_update(data["next_period_change"])
+
+        return data
+
+    def _schedule_event_update(self, event_time: datetime) -> None:
+        """Schedule an update at the exact event time.
+
+        Args:
+            event_time: The datetime when the next period change occurs.
+        """
+        # Cancel previous event listener if exists
+        if self._unsub_event:
+            self._unsub_event()
+            self._unsub_event = None
+
+        # Only schedule if event is in the future
+        if event_time > dt_util.utcnow():
+            _LOGGER.debug(
+                "Scheduling period change update for %s at %s",
+                self.config_entry.title,
+                event_time,
+            )
+            self._unsub_event = async_track_point_in_time(
+                self.hass,
+                self._handle_event_update,
+                event_time,
+            )
+
+    async def _handle_event_update(self, _now: datetime) -> None:
+        """Handle the event-based update callback.
+
+        This is called at the exact moment of a period change.
+        """
+        _LOGGER.info(
+            "Period change event triggered for %s, refreshing data",
+            self.config_entry.title,
+        )
+        await self.async_refresh()
+
+    def async_unload(self) -> None:
+        """Clean up event listener when coordinator is unloaded."""
+        if self._unsub_event:
+            self._unsub_event()
+            self._unsub_event = None
