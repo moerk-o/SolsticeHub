@@ -1,48 +1,35 @@
-### 🐞 Bug Fixes
+### ⚠️ Breaking Changes
 
-- **Fixed daylight trend for southern hemisphere** ([#8](https://github.com/moerk-o/ha-solstice_season/issues/8))
-  - The `daylight_trend` sensor now correctly shows "days getting shorter" after the summer solstice in the southern hemisphere
-  - Previously, the sensor showed the northern hemisphere perspective regardless of configuration
-
-### 🔮 v2.0 is coming!
-
-The next major version will include breaking changes, support for new calendar systems, and a new name for the integration.
-
-**Get ready for SolsticeHub!**
-
-**Full Changelog**: https://github.com/moerk-o/ha-solstice_season/compare/v1.5.0...v1.5.1
-
----
-
-# v1.5.0
+- **The integration was renamed from *Solstice Season* to *SolsticeHub*.**
+  - The domain changed from `solstice_season` to `solsticehub`, and the
+    repository moved to [`ha-solsticehub`](https://github.com/moerk-o/ha-solsticehub).
+  - Home Assistant cannot migrate config entries across domains, so this is a
+    one-time manual step: **remove the old "Solstice Season" integration and add
+    "SolsticeHub" anew** (Settings → Devices & Services). Your automations that
+    reference the old entities need to be repointed to the new ones.
 
 ### ✨ New Features
-- Added `season_age` attribute to current season sensor for progress tracking ([#2](https://github.com/moerk-o/ha-solstice_season/issues/2))
 
-### 🐞 Bug Fixes
-- Daylight trend now shows correct values in meteorological mode ([#3](https://github.com/moerk-o/ha-solstice_season/issues/3))
-- Device model now correctly displays "Astronomical Calculator" or "Meteorological Calculator" ([#5](https://github.com/moerk-o/ha-solstice_season/issues/5))
+- **Device types**: when adding the integration you now choose a device type:
+  - **Four Seasons** – the classic astronomical/meteorological seasons.
+  - **Cross-Quarter / Celtic** – the Wheel of the Year (Imbolc, Beltane, …),
+    astronomical midpoints or traditional fixed dates, system or Celtic naming.
+  - **Chinese Solar Terms** – the 24 solar terms (or the 8 major ones), with
+    system, Pinyin or Hanzi naming.
+- **Daylight trend on every calendar**: `daylight_trend` and
+  `next_daylight_trend_change` are now part of every device, alongside a
+  diagnostic `solar_longitude` sensor (disabled by default).
+- **`season_progress`** attribute on the current-season sensor.
 
-### 📝 Documentation
-- Updated README with new `season_age` attribute
+### 🗑️ Removed
 
-### 💬 Feedback Needed!
-- Considering changes to some attributes on the current_season sensor -- [please share your thoughts on issue #4](https://github.com/moerk-o/ha-solstice_season/issues/4)!
-
-**Full Changelog**: https://github.com/moerk-o/ha-solstice_season/compare/v1.4.0...v1.5.0
-
----
-
-# v1.4.0
-
-### ✨ New Features
-- Hemisphere is now pre-selected based on your Home location during setup ([#1](https://github.com/moerk-o/ha-solstice_season/issues/1))
-- Device firmware version now reflects integration version
-
-### 🔧 Infrastructure
-- Switched to release asset packaging
+- The separate **Base Data** device type. Its sensors are now included in every
+  calendar device, so a single device gives you both the calendar and the
+  daylight trend.
 
 ### 📝 Documentation
-- Updated README with new hemisphere-default behavior
 
-**Full Changelog**: https://github.com/moerk-o/ha-solstice_season/compare/v1.3.0...v1.4.0
+- For the complete v1.x release history (as *Solstice Season*), see
+  [RELEASENOTES_v1.md](RELEASENOTES_v1.md).
+
+**Full Changelog**: https://github.com/moerk-o/ha-solsticehub/compare/v1.5.1...v2.0.0
