@@ -4,7 +4,7 @@
 > astronomical seasons, the Celtic Wheel of the Year, and the Chinese solar
 > terms — with exact timestamps, countdowns and daylight-trend tracking.
 
-[![GitHub Release](https://img.shields.io/github/v/release/moerk-o/ha-solsticehub?style=flat-square)](https://github.com/moerk-o/ha-solsticehub/releases)
+[![GitHub Release](https://img.shields.io/github/v/release/moerk-o/SolsticeHub?style=flat-square)](https://github.com/moerk-o/SolsticeHub/releases)
 [![HACS](https://img.shields.io/badge/HACS-Default-41BDF5.svg?style=flat-square)](https://github.com/hacs/integration)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Custom%20Integration-41bdf5?style=flat-square&logo=homeassistant)](https://www.home-assistant.io/)
@@ -39,7 +39,7 @@ trend change (the next solstice), and a diagnostic solar-longitude sensor
 
 ### HACS (recommended)
 
-[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=moerk-o&repository=ha-solsticehub)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=moerk-o&repository=SolsticeHub)
 
 1. Click the button above, or search for **SolsticeHub** in HACS
 2. Install the integration and restart Home Assistant
@@ -48,7 +48,7 @@ trend change (the next solstice), and a diagnostic solar-longitude sensor
 
 ### Manual
 
-1. Download the latest release from [GitHub Releases](https://github.com/moerk-o/ha-solsticehub/releases)
+1. Download the latest release from [GitHub Releases](https://github.com/moerk-o/SolsticeHub/releases)
 2. Copy `custom_components/solsticehub` into your `config/custom_components/` directory
 3. Restart Home Assistant and add the integration via the UI
 

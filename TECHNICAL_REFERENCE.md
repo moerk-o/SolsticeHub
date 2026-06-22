@@ -5,7 +5,7 @@
 **Target Platform:** Home Assistant Custom Integration
 **Development Language:** English (code, comments, variables)
 **Translations:** English (fallback), German, Dutch
-**Repository:** https://github.com/moerk-o/ha-solsticehub
+**Repository:** https://github.com/moerk-o/SolsticeHub
 
 ---
 
@@ -246,7 +246,7 @@ only duplicates would require cross-entry coordination — exactly the complexit
 ### 5.12 ADR: Domain rename to solsticehub
 
 **Decision:** Rename the integration to **SolsticeHub** (domain `solsticehub`,
-repo `ha-solsticehub`), shipped as a major version (v2.0.0).
+repo `SolsticeHub`), shipped as a major version (v2.0.0).
 
 **Context:** The project was renamed for branding. Home Assistant matches config
 entries by domain and offers no cross-domain migration (`async_migrate_entry`

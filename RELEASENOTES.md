@@ -2,7 +2,7 @@
 
 - **The integration was renamed from *Solstice Season* to *SolsticeHub*.**
   - The domain changed from `solstice_season` to `solsticehub`, and the
-    repository moved to [`ha-solsticehub`](https://github.com/moerk-o/ha-solsticehub).
+    repository moved to [`SolsticeHub`](https://github.com/moerk-o/SolsticeHub).
   - Home Assistant cannot migrate config entries across domains, so this is a
     one-time manual step: **remove the old "Solstice Season" integration and add
     "SolsticeHub" anew** (Settings → Devices & Services). Your automations that
@@ -32,4 +32,4 @@
 - For the complete v1.x release history (as *Solstice Season*), see
   [RELEASENOTES_v1.md](RELEASENOTES_v1.md).
 
-**Full Changelog**: https://github.com/moerk-o/ha-solsticehub/compare/v1.5.1...v2.0.0
+**Full Changelog**: https://github.com/moerk-o/SolsticeHub/compare/v1.5.1...v2.0.0
