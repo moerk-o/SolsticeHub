@@ -1,8 +1,8 @@
-"""Constants for the Solstice Season integration."""
+"""Constants for the SolsticeHub integration."""
 
 from typing import Final
 
-DOMAIN: Final = "solstice_season"
+DOMAIN: Final = "solsticehub"
 
 # Configuration keys
 CONF_NAME: Final = "name"

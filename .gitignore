@@ -47,5 +47,16 @@ home-assistant_v2.db
 # Project internal
 bugs.md
 assets/
-KONZEPT_solstice_season.md
 prompt.md
+konzept.md
+KONZEPT_*.md
+docs/
+
+# Claude Code internal (do not publish — see CLAUDE_GUIDE.md 3.4 / GIT_WORKFLOW_GUIDE.md 1.9)
+CLAUDE.md
+CLAUDE_GUIDE.md
+GIT_WORKFLOW_GUIDE.md
+DOCUMENTATION_GUIDE.md
+RELEASE_GUIDE.md
+TESTING_GUIDE.md
+GUIDES_FEEDBACK.md

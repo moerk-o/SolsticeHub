@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Configure Solstice Season",
+        "title": "Configure SolsticeHub",
         "description": "Set up a sun-based calendar system",
         "data": {
           "name": "Name",

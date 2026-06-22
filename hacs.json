@@ -1,5 +1,6 @@
 {
-  "name": "Solstice Season",
+  "name": "SolsticeHub",
   "zip_release": true,
-  "filename": "solstice_season.zip"
+  "filename": "solsticehub.zip",
+  "render_readme": true
 }

@@ -1,4 +1,4 @@
-"""Astronomical calculations for the Solstice Season integration.
+"""Astronomical calculations for the SolsticeHub integration.
 
 This module contains all calculation logic for seasons, equinoxes,
 solstices, and daylight trends. It is independent of Home Assistant

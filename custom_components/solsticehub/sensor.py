@@ -1,4 +1,4 @@
-"""Sensor platform for Solstice Season integration.
+"""Sensor platform for SolsticeHub integration.
 
 This module serves as the entry point for all sensor entities.
 It routes sensor creation based on device type:
@@ -55,7 +55,7 @@ from .const import (
     SENSOR_SUMMER_SOLSTICE,
     SENSOR_WINTER_SOLSTICE,
 )
-from .coordinator import SolsticeSeasonCoordinator
+from .coordinator import SolsticeHubCoordinator
 from .cross_quarter_sensor import CROSS_QUARTER_SENSOR_DESCRIPTIONS, CrossQuarterSensor
 
 # Load version from manifest.json
@@ -64,8 +64,8 @@ VERSION = MANIFEST["version"]
 
 
 @dataclass(frozen=True, kw_only=True)
-class SolsticeSeasonSensorEntityDescription(SensorEntityDescription):
-    """Describes a Solstice Season sensor entity."""
+class SolsticeHubSensorEntityDescription(SensorEntityDescription):
+    """Describes a SolsticeHub sensor entity."""
 
     value_fn: Callable[[SeasonData], Any]
     extra_state_attributes_fn: Callable[[SeasonData], dict[str, Any]] | None = None
@@ -78,8 +78,8 @@ def get_current_season_icon(data: SeasonData) -> str:
 
 
 # Four Seasons sensor descriptions
-FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeSeasonSensorEntityDescription, ...] = (
-    SolsticeSeasonSensorEntityDescription(
+FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeHubSensorEntityDescription, ...] = (
+    SolsticeHubSensorEntityDescription(
         key=SENSOR_CURRENT_SEASON,
         translation_key=SENSOR_CURRENT_SEASON,
         device_class=SensorDeviceClass.ENUM,
@@ -91,7 +91,7 @@ FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeSeasonSensorEntityDescription, .
         },
         icon_fn=get_current_season_icon,
     ),
-    SolsticeSeasonSensorEntityDescription(
+    SolsticeHubSensorEntityDescription(
         key=SENSOR_SPRING_EQUINOX,
         translation_key=SENSOR_SPRING_EQUINOX,
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -102,7 +102,7 @@ FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeSeasonSensorEntityDescription, .
             "last_start": data["previous_spring_equinox"].date().isoformat(),
         },
     ),
-    SolsticeSeasonSensorEntityDescription(
+    SolsticeHubSensorEntityDescription(
         key=SENSOR_SUMMER_SOLSTICE,
         translation_key=SENSOR_SUMMER_SOLSTICE,
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -113,7 +113,7 @@ FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeSeasonSensorEntityDescription, .
             "last_start": data["previous_summer_solstice"].date().isoformat(),
         },
     ),
-    SolsticeSeasonSensorEntityDescription(
+    SolsticeHubSensorEntityDescription(
         key=SENSOR_AUTUMN_EQUINOX,
         translation_key=SENSOR_AUTUMN_EQUINOX,
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -124,7 +124,7 @@ FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeSeasonSensorEntityDescription, .
             "last_start": data["previous_autumn_equinox"].date().isoformat(),
         },
     ),
-    SolsticeSeasonSensorEntityDescription(
+    SolsticeHubSensorEntityDescription(
         key=SENSOR_WINTER_SOLSTICE,
         translation_key=SENSOR_WINTER_SOLSTICE,
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -135,7 +135,7 @@ FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeSeasonSensorEntityDescription, .
             "last_start": data["previous_winter_solstice"].date().isoformat(),
         },
     ),
-    SolsticeSeasonSensorEntityDescription(
+    SolsticeHubSensorEntityDescription(
         key=SENSOR_NEXT_SEASON_CHANGE,
         translation_key=SENSOR_NEXT_SEASON_CHANGE,
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -146,7 +146,7 @@ FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeSeasonSensorEntityDescription, .
             "event_type": data["next_season_change_event_type"],
         },
     ),
-) + make_base_sensor_descriptions(SolsticeSeasonSensorEntityDescription)
+) + make_base_sensor_descriptions(SolsticeHubSensorEntityDescription)
 
 
 async def async_setup_entry(
@@ -154,7 +154,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Solstice Season sensors from a config entry.
+    """Set up SolsticeHub sensors from a config entry.
 
     This routes sensor creation based on the device type configured
     in the config entry.
@@ -195,17 +195,17 @@ async def async_setup_entry(
 
 
 class FourSeasonsSensor(
-    CoordinatorEntity[SolsticeSeasonCoordinator], SensorEntity
+    CoordinatorEntity[SolsticeHubCoordinator], SensorEntity
 ):
     """Representation of a Four Seasons sensor."""
 
-    entity_description: SolsticeSeasonSensorEntityDescription
+    entity_description: SolsticeHubSensorEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: SolsticeSeasonCoordinator,
-        description: SolsticeSeasonSensorEntityDescription,
+        coordinator: SolsticeHubCoordinator,
+        description: SolsticeHubSensorEntityDescription,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the sensor.
@@ -238,7 +238,7 @@ class FourSeasonsSensor(
         return DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.entry_id)},
             name=self._config_entry.data[CONF_NAME],
-            manufacturer="Solstice Season",
+            manufacturer="SolsticeHub",
             model=model,
             sw_version=VERSION,
         )

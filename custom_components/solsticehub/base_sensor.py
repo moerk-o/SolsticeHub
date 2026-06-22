@@ -1,4 +1,4 @@
-"""Shared base-data sensors for the Solstice Season integration.
+"""Shared base-data sensors for the SolsticeHub integration.
 
 These three sensors describe the underlying astronomical reality that is
 common to every calendar system, so they are added to all calendar device

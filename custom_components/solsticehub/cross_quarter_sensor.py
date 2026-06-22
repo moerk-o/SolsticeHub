@@ -128,7 +128,7 @@ class CrossQuarterSensor(
         return DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.entry_id)},
             name=self._config_entry.data[CONF_NAME],
-            manufacturer="Solstice Season",
+            manufacturer="SolsticeHub",
             model=model,
             sw_version=VERSION,
         )

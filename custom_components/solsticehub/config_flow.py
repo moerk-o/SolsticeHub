@@ -1,4 +1,4 @@
-"""Config flow for Solstice Season integration.
+"""Config flow for SolsticeHub integration.
 
 This implements a multi-step config flow:
 1. Step 1 (user): Name and Device Type selection
@@ -41,8 +41,8 @@ from .const import (
 )
 
 
-class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Solstice Season."""
+class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for SolsticeHub."""
 
     VERSION = 1
 

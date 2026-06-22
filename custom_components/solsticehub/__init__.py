@@ -1,4 +1,4 @@
-"""The Solstice Season integration.
+"""The SolsticeHub integration.
 
 This integration provides precise, daily seasonal information as sensors
 in Home Assistant. It calculates astronomical events and provides various
@@ -29,7 +29,7 @@ from .const import (
     DEVICE_FOUR_SEASONS,
     DOMAIN,
 )
-from .coordinator import SolsticeSeasonCoordinator
+from .coordinator import SolsticeHubCoordinator
 from .cross_quarter_coordinator import CrossQuarterCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,7 +38,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Solstice Season from a config entry.
+    """Set up SolsticeHub from a config entry.
 
     Each config entry creates one device with its own coordinator.
     The device type determines which coordinator and sensors are created.
@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     Returns:
         True if setup was successful.
     """
-    _LOGGER.debug("Setting up Solstice Season integration: %s", entry.title)
+    _LOGGER.debug("Setting up SolsticeHub integration: %s", entry.title)
 
     # Get device type (default to four_seasons for backward compatibility)
     device_type = entry.data.get(CONF_DEVICE_TYPE, DEVICE_FOUR_SEASONS)
@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator = ChineseSolarTermsCoordinator(hass, entry)
     else:
         # Default to Four Seasons (also for backward compatibility)
-        coordinator = SolsticeSeasonCoordinator(hass, entry)
+        coordinator = SolsticeHubCoordinator(hass, entry)
 
     # Fetch initial data
     await coordinator.async_config_entry_first_refresh()
@@ -91,7 +91,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     Returns:
         True if unload was successful.
     """
-    _LOGGER.debug("Unloading Solstice Season integration: %s", entry.title)
+    _LOGGER.debug("Unloading SolsticeHub integration: %s", entry.title)
 
     # Unload platforms
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):

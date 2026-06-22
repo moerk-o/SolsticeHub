@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for Solstice Season integration."""
+"""DataUpdateCoordinator for SolsticeHub integration."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ def _calculate_time_until_midnight() -> timedelta:
     return time_until
 
 
-class SolsticeSeasonCoordinator(DataUpdateCoordinator[SeasonData]):
+class SolsticeHubCoordinator(DataUpdateCoordinator[SeasonData]):
     """Coordinator for solstice season data.
 
     This coordinator manages data updates for all sensors. It calculates
