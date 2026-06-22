@@ -6,7 +6,6 @@ for the southern hemisphere.
 
 from datetime import datetime, timezone
 
-import pytest
 from freezegun import freeze_time
 
 # Add parent directory to path for imports

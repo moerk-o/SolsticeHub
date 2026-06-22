@@ -7,7 +7,6 @@ Covers the entry step (name + device type) and each device-specific step
 import sys
 from pathlib import Path
 
-import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

@@ -7,9 +7,8 @@ This module tests:
 """
 
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
-import pytest
 from freezegun import freeze_time
 
 # Add parent directory to path for imports
@@ -176,8 +175,9 @@ class TestEventScheduling:
 
                     coordinator._schedule_event_update(event_time)
 
-                    # Previous listener should be cancelled
+                    # Previous listener should be cancelled, new one scheduled
                     mock_unsub.assert_called_once()
+                    mock_track.assert_called_once()
 
 
 class TestAsyncUnload:
