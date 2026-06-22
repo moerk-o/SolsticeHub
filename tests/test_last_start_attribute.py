@@ -22,7 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "custom_components"))
 
-from solstice_season.calculations import (
+from solsticehub.calculations import (
     calculate_season_data,
     get_previous_event_date,
     get_astronomical_events,
