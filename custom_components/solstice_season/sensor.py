@@ -2,10 +2,12 @@
 
 This module serves as the entry point for all sensor entities.
 It routes sensor creation based on device type:
-- Base Data: solar_longitude, daylight_trend, next_trend_change
 - Four Seasons: current_season, equinox/solstice timestamps, etc.
 - Cross-Quarter: current_period, next_period_change
 - Chinese Solar Terms: current_term, next_term_change
+
+Every calendar device type additionally gets the shared base-data sensors
+(solar_longitude, daylight_trend, next_daylight_trend_change).
 """
 
 from __future__ import annotations
@@ -28,21 +30,16 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .base_data_coordinator import BaseDataCoordinator
-from .base_sensor import BASE_SENSOR_DESCRIPTIONS, BaseDataSensor
+from .base_sensor import make_base_sensor_descriptions
 from .calculations import SeasonData
-from .chinese_coordinator import ChineseSolarTermsCoordinator
 from .chinese_sensor import ChineseSolarTermsSensor, get_chinese_sensor_descriptions
 from .const import (
-    CONF_DEVICE_TYPE,
     CONF_HEMISPHERE,
     CONF_MODE,
     CONF_NAME,
     CONF_SCOPE,
-    DEVICE_BASE_DATA,
     DEVICE_CHINESE,
     DEVICE_CROSS_QUARTER,
-    DEVICE_FOUR_SEASONS,
     DOMAIN,
     ICON_AUTUMN,
     ICON_NEXT_SEASON_CHANGE,
@@ -59,7 +56,6 @@ from .const import (
     SENSOR_WINTER_SOLSTICE,
 )
 from .coordinator import SolsticeSeasonCoordinator
-from .cross_quarter_coordinator import CrossQuarterCoordinator
 from .cross_quarter_sensor import CROSS_QUARTER_SENSOR_DESCRIPTIONS, CrossQuarterSensor
 
 # Load version from manifest.json
@@ -150,7 +146,7 @@ FOUR_SEASONS_SENSOR_DESCRIPTIONS: tuple[SolsticeSeasonSensorEntityDescription, .
             "event_type": data["next_season_change_event_type"],
         },
     ),
-)
+) + make_base_sensor_descriptions(SolsticeSeasonSensorEntityDescription)
 
 
 async def async_setup_entry(
@@ -174,13 +170,7 @@ async def async_setup_entry(
 
     entities: list[SensorEntity] = []
 
-    if device_type == DEVICE_BASE_DATA:
-        # Base Data sensors
-        entities.extend(
-            BaseDataSensor(coordinator, description, config_entry)
-            for description in BASE_SENSOR_DESCRIPTIONS
-        )
-    elif device_type == DEVICE_CROSS_QUARTER:
+    if device_type == DEVICE_CROSS_QUARTER:
         # Cross-Quarter sensors
         entities.extend(
             CrossQuarterSensor(coordinator, description, config_entry)
@@ -254,7 +244,7 @@ class FourSeasonsSensor(
         )
 
     @property
-    def native_value(self) -> str | datetime | None:
+    def native_value(self) -> str | float | datetime | None:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             return None

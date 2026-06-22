@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .calculations import CrossQuarterData, calculate_cross_quarter_data
-from .const import CONF_MODE, DOMAIN
+from .const import CONF_HEMISPHERE, CONF_MODE, DOMAIN, HEMISPHERE_NORTHERN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +59,9 @@ class CrossQuarterCoordinator(DataUpdateCoordinator[CrossQuarterData]):
         )
         self.config_entry = config_entry
         self.mode: str = config_entry.data[CONF_MODE]
+        self.hemisphere: str = config_entry.data.get(
+            CONF_HEMISPHERE, HEMISPHERE_NORTHERN
+        )
         self._unsub_event: Callable[[], None] | None = None
 
     async def _async_update_data(self) -> CrossQuarterData:
@@ -84,6 +87,7 @@ class CrossQuarterCoordinator(DataUpdateCoordinator[CrossQuarterData]):
         # Run calculation in executor as it may be CPU-intensive
         data = await self.hass.async_add_executor_job(
             calculate_cross_quarter_data,
+            self.hemisphere,
             self.mode,
             now,
         )

@@ -23,7 +23,6 @@ from .const import (
     CONF_NAMING,
     CONF_SCOPE,
     DEFAULT_NAME,
-    DEVICE_BASE_DATA,
     DEVICE_CHINESE,
     DEVICE_CROSS_QUARTER,
     DEVICE_FOUR_SEASONS,
@@ -76,9 +75,7 @@ class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
 
             # Route to device-specific step
             device_type = user_input[CONF_DEVICE_TYPE]
-            if device_type == DEVICE_BASE_DATA:
-                return await self.async_step_base_data()
-            elif device_type == DEVICE_FOUR_SEASONS:
+            if device_type == DEVICE_FOUR_SEASONS:
                 return await self.async_step_four_seasons()
             elif device_type == DEVICE_CROSS_QUARTER:
                 return await self.async_step_cross_quarter()
@@ -94,10 +91,6 @@ class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=[
-                            selector.SelectOptionDict(
-                                value=DEVICE_BASE_DATA,
-                                label="Base Data",
-                            ),
                             selector.SelectOptionDict(
                                 value=DEVICE_FOUR_SEASONS,
                                 label="Four Seasons",
@@ -122,60 +115,6 @@ class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors=errors,
-        )
-
-    async def async_step_base_data(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle step 2 for Base Data device.
-
-        Options:
-        - Hemisphere (northern/southern) - affects daylight_trend
-        """
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            # Merge with data from step 1
-            self._data[CONF_HEMISPHERE] = user_input[CONF_HEMISPHERE]
-
-            return self.async_create_entry(
-                title=self._data[CONF_NAME],
-                data=self._data,
-            )
-
-        # Determine default hemisphere from Home Assistant's configured latitude
-        default_hemisphere = (
-            HEMISPHERE_NORTHERN if self.hass.config.latitude >= 0 else HEMISPHERE_SOUTHERN
-        )
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_HEMISPHERE, default=default_hemisphere
-                ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[
-                            selector.SelectOptionDict(
-                                value=HEMISPHERE_NORTHERN,
-                                label="Northern Hemisphere",
-                            ),
-                            selector.SelectOptionDict(
-                                value=HEMISPHERE_SOUTHERN,
-                                label="Southern Hemisphere",
-                            ),
-                        ],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="hemisphere",
-                    ),
-                ),
-            }
-        )
-
-        return self.async_show_form(
-            step_id="base_data",
-            data_schema=data_schema,
-            errors=errors,
-            description_placeholders={"name": self._data[CONF_NAME]},
         )
 
     async def async_step_four_seasons(

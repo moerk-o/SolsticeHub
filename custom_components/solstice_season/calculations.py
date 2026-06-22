@@ -63,6 +63,8 @@ class SeasonData(TypedDict):
     days_until_summer: int
     days_until_autumn: int
     days_until_winter: int
+    # Base data fields (shared with all calendar device types)
+    solar_longitude: float
     daylight_trend: str
     next_trend_change: datetime
     days_until_trend_change: int
@@ -509,15 +511,11 @@ def calculate_season_data(hemisphere: str, mode: str, now: datetime) -> SeasonDa
     """
     year = now.year
 
-    # Always get astronomical events (needed for daylight trend calculation)
-    astronomical_events = get_astronomical_events(year)
-    astronomical_events_next = get_astronomical_events(year + 1)
-
     # Get events based on calculation mode for season determination
     if mode == MODE_ASTRONOMICAL:
         previous_events = get_astronomical_events(year - 1)
-        current_events = astronomical_events
-        next_events = astronomical_events_next
+        current_events = get_astronomical_events(year)
+        next_events = get_astronomical_events(year + 1)
         current_season = determine_current_season_astronomical(
             hemisphere, now, current_events
         )
@@ -562,27 +560,8 @@ def calculate_season_data(hemisphere: str, mode: str, now: datetime) -> SeasonDa
     days_until_autumn = calculate_days_until(autumn_event.date(), today)
     days_until_winter = calculate_days_until(winter_event.date(), today)
 
-    # Daylight trend is always based on astronomical solstices (physical reality)
-    daylight_trend = calculate_daylight_trend(
-        now,
-        astronomical_events["june_solstice"],
-        astronomical_events["december_solstice"],
-    )
-
-    # Apply hemisphere interpretation to daylight trend
-    # The base calculation gives trend for northern hemisphere
-    # For southern hemisphere, the interpretation is reversed
-    if hemisphere == HEMISPHERE_SOUTHERN:
-        if daylight_trend == TREND_LONGER:
-            daylight_trend = TREND_SHORTER
-        elif daylight_trend == TREND_SHORTER:
-            daylight_trend = TREND_LONGER
-        # TREND_SOLSTICE stays the same
-
-    next_trend_change, next_trend_event_type = get_next_solstice(
-        hemisphere, now, astronomical_events, astronomical_events_next
-    )
-    days_until_trend_change = calculate_days_until(next_trend_change.date(), today)
+    # Base data (solar_longitude + daylight trend) is shared with all calendars
+    base = calculate_base_data(hemisphere, now)
 
     next_season_change, next_season_change_event_type = get_next_season_change(
         current_season, hemisphere, current_events, next_events, now
@@ -616,24 +595,19 @@ def calculate_season_data(hemisphere: str, mode: str, now: datetime) -> SeasonDa
         days_until_summer=days_until_summer,
         days_until_autumn=days_until_autumn,
         days_until_winter=days_until_winter,
-        daylight_trend=daylight_trend,
-        next_trend_change=next_trend_change,
-        days_until_trend_change=days_until_trend_change,
-        next_trend_event_type=next_trend_event_type,
         next_season_change=next_season_change,
         next_season_change_event_type=next_season_change_event_type,
         days_until_season_change=days_until_season_change,
+        **base,
     )
 
 
 def calculate_base_data(hemisphere: str, now: datetime) -> BaseData:
-    """Calculate data for the Base Device sensors.
+    """Calculate the shared base-data fields.
 
     This includes hemisphere-independent astronomical data (solar_longitude)
-    and hemisphere-dependent interpretation (daylight_trend).
-
-    The Base Device sensors are shared across all calendar instances and
-    are created once when the first calendar is added.
+    and hemisphere-dependent interpretation (daylight_trend). These fields are
+    merged into every calendar device type's sensor data.
 
     Args:
         hemisphere: Either 'northern' or 'southern' for daylight trend interpretation.
@@ -757,6 +731,12 @@ class CrossQuarterData(TypedDict):
     next_period_event_type: str
     days_until_next_change: int
     events: dict[str, datetime]
+    # Base data fields (shared with all calendar device types)
+    solar_longitude: float
+    daylight_trend: str
+    next_trend_change: datetime
+    days_until_trend_change: int
+    next_trend_event_type: str
 
 
 def find_date_for_solar_longitude(target_longitude: float, year: int) -> datetime:
@@ -772,8 +752,6 @@ def find_date_for_solar_longitude(target_longitude: float, year: int) -> datetim
     Returns:
         UTC datetime when the Sun reaches the target longitude.
     """
-    import math
-
     # Estimate starting point based on longitude
     # 0° is around March 20, so offset accordingly
     day_of_year = int((target_longitude / 360.0) * 365.25) + 80  # ~March 20 offset
@@ -942,12 +920,14 @@ def get_next_cross_quarter_event(
 
 
 def calculate_cross_quarter_data(
+    hemisphere: str,
     mode: str,
     now: datetime,
 ) -> CrossQuarterData:
     """Calculate data for Cross-Quarter calendar sensors.
 
     Args:
+        hemisphere: Either 'northern' or 'southern' (for daylight trend).
         mode: Either 'astronomical' or 'traditional'.
         now: Current datetime in UTC.
 
@@ -991,6 +971,9 @@ def calculate_cross_quarter_data(
             event_date = next_events[event_name]
         events_dict[event_name] = event_date
 
+    # Base data (solar_longitude + daylight trend) is shared with all calendars
+    base = calculate_base_data(hemisphere, now)
+
     return CrossQuarterData(
         current_period=current_period,
         period_age=period_age,
@@ -998,6 +981,7 @@ def calculate_cross_quarter_data(
         next_period_event_type=next_event_type,
         days_until_next_change=days_until_next,
         events=events_dict,
+        **base,
     )
 
 
@@ -1093,6 +1077,12 @@ class ChineseSolarTermsData(TypedDict):
     next_term_event_type: str
     days_until_next_change: int
     events: dict[str, datetime]
+    # Base data fields (shared with all calendar device types)
+    solar_longitude: float
+    daylight_trend: str
+    next_trend_change: datetime
+    days_until_trend_change: int
+    next_trend_event_type: str
 
 
 def get_chinese_solar_terms_events(year: int) -> dict[str, datetime]:
@@ -1131,12 +1121,14 @@ def get_chinese_major_terms_events(year: int) -> dict[str, datetime]:
 
 
 def calculate_chinese_solar_terms_data(
+    hemisphere: str,
     scope: str,
     now: datetime,
 ) -> ChineseSolarTermsData:
     """Calculate data for Chinese Solar Terms calendar sensors.
 
     Args:
+        hemisphere: Either 'northern' or 'southern' (for daylight trend).
         scope: Either 'all_24' for all terms or '8_major' for major terms only.
         now: Current datetime in UTC.
 
@@ -1208,6 +1200,9 @@ def calculate_chinese_solar_terms_data(
             event_date = next_events[term_name]
         events_dict[term_name] = event_date
 
+    # Base data (solar_longitude + daylight trend) is shared with all calendars
+    base = calculate_base_data(hemisphere, now)
+
     return ChineseSolarTermsData(
         current_term=current_term,
         term_age=term_age,
@@ -1215,4 +1210,5 @@ def calculate_chinese_solar_terms_data(
         next_term_event_type=next_event_type,
         days_until_next_change=days_until_next,
         events=events_dict,
+        **base,
     )

@@ -9,13 +9,6 @@
           "device_type": "Apparaattype"
         }
       },
-      "base_data": {
-        "title": "Basisgegevens Instellingen",
-        "description": "Configureer Basisgegevens voor {name}",
-        "data": {
-          "hemisphere": "Halfrond"
-        }
-      },
       "four_seasons": {
         "title": "Vier Seizoenen Instellingen",
         "description": "Configureer de Vier Seizoenen kalender voor {name}",
@@ -51,7 +44,6 @@
   "selector": {
     "device_type": {
       "options": {
-        "base_data": "Basisgegevens",
         "four_seasons": "Vier Seizoenen",
         "cross_quarter": "Cross-Quarter / Keltisch",
         "chinese": "Chinese Zonnetermijnen"

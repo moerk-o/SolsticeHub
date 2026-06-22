@@ -9,13 +9,6 @@
           "device_type": "Device Type"
         }
       },
-      "base_data": {
-        "title": "Base Data Settings",
-        "description": "Configure Base Data for {name}",
-        "data": {
-          "hemisphere": "Hemisphere"
-        }
-      },
       "four_seasons": {
         "title": "Four Seasons Settings",
         "description": "Configure the Four Seasons calendar for {name}",
@@ -51,7 +44,6 @@
   "selector": {
     "device_type": {
       "options": {
-        "base_data": "Base Data",
         "four_seasons": "Four Seasons",
         "cross_quarter": "Cross-Quarter / Celtic",
         "chinese": "Chinese Solar Terms"

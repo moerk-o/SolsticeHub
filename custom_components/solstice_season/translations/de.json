@@ -9,13 +9,6 @@
           "device_type": "Gerätetyp"
         }
       },
-      "base_data": {
-        "title": "Basisdaten Einstellungen",
-        "description": "Konfiguriere Basisdaten für {name}",
-        "data": {
-          "hemisphere": "Hemisphäre"
-        }
-      },
       "four_seasons": {
         "title": "Vier Jahreszeiten Einstellungen",
         "description": "Konfiguriere den Vier Jahreszeiten Kalender für {name}",
@@ -51,7 +44,6 @@
   "selector": {
     "device_type": {
       "options": {
-        "base_data": "Basisdaten",
         "four_seasons": "Vier Jahreszeiten",
         "cross_quarter": "Cross-Quarter / Keltisch",
         "chinese": "Chinesische Sonnenterme"

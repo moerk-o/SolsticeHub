@@ -6,7 +6,9 @@ calendar-based sensors.
 
 v2.0 Architecture:
 - Each config entry creates one device with its own coordinator
-- Device types: Base Data, Four Seasons, Cross-Quarter, Chinese Solar Terms
+- Device types: Four Seasons, Cross-Quarter, Chinese Solar Terms
+- Every device also exposes the shared base-data sensors
+  (solar_longitude, daylight_trend, next_daylight_trend_change)
 - No shared state between devices
 - Hemisphere is fixed after configuration (no runtime changes)
 """
@@ -19,11 +21,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .base_data_coordinator import BaseDataCoordinator
 from .chinese_coordinator import ChineseSolarTermsCoordinator
 from .const import (
     CONF_DEVICE_TYPE,
-    DEVICE_BASE_DATA,
     DEVICE_CHINESE,
     DEVICE_CROSS_QUARTER,
     DEVICE_FOUR_SEASONS,
@@ -57,9 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     _LOGGER.debug("Device type: %s", device_type)
 
     # Create coordinator based on device type
-    if device_type == DEVICE_BASE_DATA:
-        coordinator = BaseDataCoordinator(hass, entry)
-    elif device_type == DEVICE_CROSS_QUARTER:
+    if device_type == DEVICE_CROSS_QUARTER:
         coordinator = CrossQuarterCoordinator(hass, entry)
     elif device_type == DEVICE_CHINESE:
         coordinator = ChineseSolarTermsCoordinator(hass, entry)

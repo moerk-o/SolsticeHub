@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .base_sensor import make_base_sensor_descriptions
 from .calculations import CrossQuarterData
 from .const import (
     CONF_MODE,
@@ -80,7 +81,7 @@ CROSS_QUARTER_SENSOR_DESCRIPTIONS: tuple[CrossQuarterSensorEntityDescription, ..
             "event_type": data["next_period_event_type"],
         },
     ),
-)
+) + make_base_sensor_descriptions(CrossQuarterSensorEntityDescription)
 
 
 class CrossQuarterSensor(
@@ -133,7 +134,7 @@ class CrossQuarterSensor(
         )
 
     @property
-    def native_value(self) -> str | datetime | None:
+    def native_value(self) -> str | float | datetime | None:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             return None

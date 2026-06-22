@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .base_sensor import make_base_sensor_descriptions
 from .calculations import ChineseSolarTermsData
 from .chinese_coordinator import ChineseSolarTermsCoordinator
 from .const import (
@@ -46,6 +47,7 @@ class ChineseSolarTermsSensorEntityDescription(SensorEntityDescription):
     extra_state_attributes_fn: Callable[[ChineseSolarTermsData], dict[str, Any]] | None = (
         None
     )
+    icon_fn: Callable[[ChineseSolarTermsData], str] | None = None
 
 
 def get_chinese_sensor_descriptions(
@@ -88,7 +90,7 @@ def get_chinese_sensor_descriptions(
                 "event_type": data["next_term_event_type"],
             },
         ),
-    )
+    ) + make_base_sensor_descriptions(ChineseSolarTermsSensorEntityDescription)
 
 
 class ChineseSolarTermsSensor(
@@ -141,7 +143,7 @@ class ChineseSolarTermsSensor(
         )
 
     @property
-    def native_value(self) -> str | datetime | None:
+    def native_value(self) -> str | float | datetime | None:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             return None
@@ -166,4 +168,6 @@ class ChineseSolarTermsSensor(
     @property
     def icon(self) -> str | None:
         """Return the icon for the sensor."""
+        if self.entity_description.icon_fn is not None and self.coordinator.data:
+            return self.entity_description.icon_fn(self.coordinator.data)
         return self.entity_description.icon

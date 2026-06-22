@@ -16,7 +16,6 @@ CONF_SCOPE: Final = "scope"
 DEFAULT_NAME: Final = "Home"
 
 # Device types
-DEVICE_BASE_DATA: Final = "base_data"
 DEVICE_FOUR_SEASONS: Final = "four_seasons"
 DEVICE_CROSS_QUARTER: Final = "cross_quarter"
 DEVICE_CHINESE: Final = "chinese"

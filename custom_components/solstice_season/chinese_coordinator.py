@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .calculations import ChineseSolarTermsData, calculate_chinese_solar_terms_data
-from .const import CONF_SCOPE, DOMAIN
+from .const import CONF_HEMISPHERE, CONF_SCOPE, DOMAIN, HEMISPHERE_NORTHERN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +59,9 @@ class ChineseSolarTermsCoordinator(DataUpdateCoordinator[ChineseSolarTermsData])
         )
         self.config_entry = config_entry
         self.scope: str = config_entry.data.get(CONF_SCOPE, "all_24")
+        self.hemisphere: str = config_entry.data.get(
+            CONF_HEMISPHERE, HEMISPHERE_NORTHERN
+        )
         self._unsub_event: Callable[[], None] | None = None
 
     async def _async_update_data(self) -> ChineseSolarTermsData:
@@ -84,6 +87,7 @@ class ChineseSolarTermsCoordinator(DataUpdateCoordinator[ChineseSolarTermsData])
         # Run calculation in executor as it may be CPU-intensive
         data = await self.hass.async_add_executor_job(
             calculate_chinese_solar_terms_data,
+            self.hemisphere,
             self.scope,
             now,
         )
