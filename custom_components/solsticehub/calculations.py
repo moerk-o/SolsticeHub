@@ -781,7 +781,7 @@ def find_date_for_solar_longitude(target_longitude: float, year: int) -> datetim
         else:
             low = mid
 
-    return low + (high - low) / 2
+    return low + (high - low) / 2  # pragma: no cover - binary search converges within 20 iterations
 
 
 def get_cross_quarter_events_astronomical(year: int) -> CrossQuarterEvents:
@@ -1167,7 +1167,7 @@ def calculate_chinese_solar_terms_data(
                 current_term = all_events[i - 1][0]
                 current_term_start = all_events[i - 1][1]
             break
-    else:
+    else:  # pragma: no cover - next-year events always exist, so the loop always breaks
         # now is after all events
         current_term = all_events[-1][0]
         current_term_start = all_events[-1][1]
@@ -1185,7 +1185,7 @@ def calculate_chinese_solar_terms_data(
             next_event_type = term_name
             break
 
-    if next_change is None:
+    if next_change is None:  # pragma: no cover - unreachable, next-year events always exist
         # Should not happen, but fallback to next year's first term
         next_change = next_events[term_list[0]]
         next_event_type = term_list[0]
