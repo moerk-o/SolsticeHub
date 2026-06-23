@@ -12,6 +12,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from homeassistant.util import slugify
+
 from .const import (
     CONF_MODE,
     CONF_SCOPE,
@@ -86,3 +88,14 @@ def device_model(
     if type_labels is None or option_labels is None:  # pragma: no cover - defensive
         return device_type
     return f"{_localize(type_labels, language)} ({_localize(option_labels, language)})"
+
+
+def english_object_id(device_type: str, data: Mapping[str, Any], key: str) -> str:
+    """Return a fully English, language-independent entity object_id.
+
+    Combines the English device label with the sensor key, e.g.
+    ``four_seasons_astronomical_current_season``. It is derived from the device
+    type/mode (always English), not from the localized device name, so entity
+    IDs never change with the system language and stay predictable.
+    """
+    return slugify(f"{device_model(device_type, data)} {key}")

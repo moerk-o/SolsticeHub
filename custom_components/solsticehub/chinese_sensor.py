@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -34,7 +35,7 @@ from .const import (
     SENSOR_CURRENT_TERM,
     SENSOR_NEXT_TERM_CHANGE,
 )
-from .device import device_model
+from .device import device_model, english_object_id
 
 # Load version from manifest.json
 MANIFEST = json.loads((Path(__file__).parent / "manifest.json").read_text())
@@ -123,10 +124,10 @@ class ChineseSolarTermsSensor(
         # Set unique_id based on entry_id and sensor key
         self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
 
-    @property
-    def suggested_object_id(self) -> str | None:
-        """Use the English sensor key so entity IDs stay language-independent."""
-        return self.entity_description.key
+        # Fully English, language-independent entity_id (see FourSeasonsSensor).
+        self.entity_id = ENTITY_ID_FORMAT.format(
+            english_object_id(DEVICE_CHINESE, config_entry.data, description.key)
+        )
 
     @property
     def device_info(self) -> DeviceInfo:

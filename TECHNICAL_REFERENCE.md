@@ -141,21 +141,27 @@ Three independent layers, each with a different language source:
 
 | Layer | Example | Language follows | Mechanism |
 |-------|---------|------------------|-----------|
-| Entity ID | `sensor.home_current_season` | none — always English | `suggested_object_id` returns the English `entity_description.key` |
+| Entity ID | `sensor.four_seasons_astronomical_current_season` | none — always fully English | explicit `self.entity_id` from `device.english_object_id` |
 | Entity display name | "Current Season" / "Aktuelle Jahreszeit" | viewing user (live) | `translation_key` + `_attr_has_entity_name` |
 | Default instance name | "Four Seasons (Astronomical)" / "Vier Jahreszeiten (Astronomisch)" | system language at setup | `device_model(..., hass.config.language)`, English fallback |
 
-`device.device_model` is the single source for both the localized default name
-*and* the device `model`. The default name is built in the system language
+`device.device_model` is the single source for the localized default name *and*
+the device `model`. The default name is built in the system language
 (`hass.config.language`) because config entry titles and device names are stored
 strings HA does not re-translate. The device `model`, by contrast, is a stable
 identifier and is always English (`device_model` called without a language) —
 like a hardware model number, it is not localized.
 
-Entity IDs must never depend on the language: without `suggested_object_id` HA
-would derive them from the translated entity name (`aktuelle_jahreszeit` on a
-German system), which would break automations on a language change. Each sensor
-class therefore overrides `suggested_object_id` to return the English key.
+**Entity IDs are fully English and decoupled from the device name.** With
+`_attr_has_entity_name` alone, HA would build the entity_id as
+`{device_name} {entity_name}` — both parts localized (e.g.
+`sensor.vier_jahreszeiten_astronomisch_aktuelle_jahreszeit`), which would differ
+per language and break automations. Instead each sensor sets `self.entity_id`
+explicitly in `__init__` from `device.english_object_id` — the English device
+type/mode label plus the English sensor key (`four_seasons_astronomical_current_season`).
+The display name still follows the viewing user's language via `translation_key`;
+only the entity_id is forced English. (No registry migration is provided — v2.0
+is a remove-and-re-add upgrade, so entities are recreated with the new IDs.)
 
 ---
 
@@ -173,7 +179,7 @@ custom_components/solsticehub/
 ├── __init__.py                  # entry setup/unload, routes by device type
 ├── config_flow.py               # multi-step config flow
 ├── const.py                     # constants (domain, device types, keys, icons)
-├── device.py                    # device_model: default name + device model label
+├── device.py                    # device_model (name/model label) + english_object_id (entity IDs)
 ├── calculations.py              # all astronomical calculations (pure functions)
 ├── manifest.json
 ├── coordinator.py               # Four Seasons coordinator

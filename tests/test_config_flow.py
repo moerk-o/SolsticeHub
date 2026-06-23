@@ -26,7 +26,7 @@ from solsticehub.const import (  # noqa: E402
     DEVICE_FOUR_SEASONS,
     DOMAIN,
 )
-from solsticehub.device import device_model  # noqa: E402
+from solsticehub.device import device_model, english_object_id  # noqa: E402
 
 
 async def _start(hass: HomeAssistant, device_type: str):
@@ -96,6 +96,19 @@ async def test_default_name_uses_ha_language(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Vier Jahreszeiten (Astronomisch)"
     assert result["data"][CONF_NAME] == "Vier Jahreszeiten (Astronomisch)"
+
+
+def test_english_object_id_is_language_independent() -> None:
+    """The entity object_id is fully English, regardless of the device name."""
+    data = {CONF_MODE: "astronomical"}
+    assert (
+        english_object_id(DEVICE_FOUR_SEASONS, data, "current_season")
+        == "four_seasons_astronomical_current_season"
+    )
+    assert (
+        english_object_id(DEVICE_CHINESE, {CONF_SCOPE: "8_major"}, "current_term")
+        == "chinese_solar_terms_8_major_current_term"
+    )
 
 
 async def test_first_step_has_no_name_field(hass: HomeAssistant) -> None:

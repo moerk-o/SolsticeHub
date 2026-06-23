@@ -63,15 +63,17 @@ def _state_for(hass: HomeAssistant, entry: MockConfigEntry, suffix: str):
 
 
 @pytest.mark.parametrize("language", ["en", "de"])
-async def test_entity_ids_are_language_independent(
-    hass: HomeAssistant, language
-) -> None:
-    """Entity IDs use the English sensor keys regardless of system language."""
+async def test_entity_ids_are_fully_english(hass: HomeAssistant, language) -> None:
+    """Entity IDs are fully English and independent of the localized device name.
+
+    Even with a non-English device name and a German system, the entity_id is
+    built from the English device type/mode label, not the device name.
+    """
     hass.config.language = language
     entry = await _setup(
         hass,
         {
-            "name": "Home",
+            "name": "Schöner Garten",  # non-English device name
             "device_type": "four_seasons",
             "hemisphere": "northern",
             "mode": "astronomical",
@@ -83,11 +85,15 @@ async def test_entity_ids_are_language_independent(
         e.entity_id
         for e in er.async_entries_for_config_entry(registry, entry.entry_id)
     ]
-    # Every entity ID ends with its English sensor key...
+    # Every entity ID is the English type/mode prefix + English sensor key.
     for suffix in FOUR_SEASONS_SUFFIXES:
-        assert any(eid.endswith(suffix) for eid in entity_ids), (suffix, entity_ids)
-    # ...and no translated (German) entity-name slug leaked into the IDs.
+        assert f"sensor.four_seasons_astronomical_{suffix}" in entity_ids, (
+            suffix,
+            entity_ids,
+        )
+    # Neither the device name nor a translated entity name leaked into the IDs.
     joined = " ".join(entity_ids)
+    assert "garten" not in joined
     assert "jahreszeit" not in joined
     assert "sonnenwende" not in joined
 

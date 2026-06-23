@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -57,7 +58,7 @@ from .const import (
 )
 from .coordinator import SolsticeHubCoordinator
 from .cross_quarter_sensor import CROSS_QUARTER_SENSOR_DESCRIPTIONS, CrossQuarterSensor
-from .device import device_model
+from .device import device_model, english_object_id
 
 # Load version from manifest.json
 MANIFEST = json.loads((Path(__file__).parent / "manifest.json").read_text())
@@ -223,15 +224,12 @@ class FourSeasonsSensor(
         # Set unique_id based on entry_id and sensor key
         self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
 
-    @property
-    def suggested_object_id(self) -> str | None:
-        """Use the English sensor key so entity IDs stay language-independent.
-
-        Without this, the entity_id would be derived from the translated entity
-        name (e.g. ``current_season`` vs ``aktuelle_jahreszeit``), which would
-        differ per system language and break automations on a language change.
-        """
-        return self.entity_description.key
+        # Build a fully English, language-independent entity_id from the device
+        # type/mode label (not the localized device name), so entity IDs never
+        # change with the system language and stay predictable for automations.
+        self.entity_id = ENTITY_ID_FORMAT.format(
+            english_object_id(DEVICE_FOUR_SEASONS, config_entry.data, description.key)
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
