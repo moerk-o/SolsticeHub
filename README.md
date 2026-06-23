@@ -83,11 +83,11 @@ These three sensors describe the sun itself, independent of any calendar, so
 Cross-Quarter or Chinese device. That way a single device gives you both the
 calendar *and* "is the day getting longer", with no extra setup.
 
-This is deliberate: if you add several devices they will each carry these
-sensors, so you may see the daylight-trend sensors more than once. The
-duplicates are harmless and you can disable the extra ones per entity. (We chose
-this over a separate "base data" device on purpose — see the rationale in
-[TECHNICAL_REFERENCE.md](TECHNICAL_REFERENCE.md#511-adr-base-data-folded-into-every-calendar-device).)
+I deliberately chose to let these sensors appear more than once if you add
+several devices, because it's a simpler and — in my view — more user-friendly
+approach than introducing a separate device just for them or applying other
+"tricks". If it bothers you, the duplicates are harmless and you can disable the
+extra ones per entity. I'm always open to suggestions for improvement.
 
 | Entity | Type | Description |
 |--------|------|-------------|
