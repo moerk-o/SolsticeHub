@@ -25,13 +25,14 @@ from .const import (
     CONF_NAME,
     CROSS_QUARTER_ICONS,
     CROSS_QUARTER_PERIODS,
+    DEVICE_CROSS_QUARTER,
     DOMAIN,
     ICON_NEXT_PERIOD_CHANGE,
-    MODE_ASTRONOMICAL,
     SENSOR_CURRENT_PERIOD,
     SENSOR_NEXT_PERIOD_CHANGE,
 )
 from .cross_quarter_coordinator import CrossQuarterCoordinator
+from .device import device_model
 
 # Load version from manifest.json
 MANIFEST = json.loads((Path(__file__).parent / "manifest.json").read_text())
@@ -118,18 +119,11 @@ class CrossQuarterSensor(
 
         All sensors are grouped under a single device with the user's chosen name.
         """
-        mode = self._config_entry.data[CONF_MODE]
-        model = (
-            "Cross-Quarter (Astronomical)"
-            if mode == MODE_ASTRONOMICAL
-            else "Cross-Quarter (Traditional)"
-        )
-
         return DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.entry_id)},
             name=self._config_entry.data[CONF_NAME],
             manufacturer="SolsticeHub",
-            model=model,
+            model=device_model(DEVICE_CROSS_QUARTER, self._config_entry.data),
             sw_version=VERSION,
         )
 

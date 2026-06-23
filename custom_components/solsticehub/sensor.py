@@ -40,13 +40,13 @@ from .const import (
     CONF_SCOPE,
     DEVICE_CHINESE,
     DEVICE_CROSS_QUARTER,
+    DEVICE_FOUR_SEASONS,
     DOMAIN,
     ICON_AUTUMN,
     ICON_NEXT_SEASON_CHANGE,
     ICON_SPRING,
     ICON_SUMMER,
     ICON_WINTER,
-    MODE_ASTRONOMICAL,
     SEASON_ICONS,
     SENSOR_AUTUMN_EQUINOX,
     SENSOR_CURRENT_SEASON,
@@ -57,6 +57,7 @@ from .const import (
 )
 from .coordinator import SolsticeHubCoordinator
 from .cross_quarter_sensor import CROSS_QUARTER_SENSOR_DESCRIPTIONS, CrossQuarterSensor
+from .device import device_model
 
 # Load version from manifest.json
 MANIFEST = json.loads((Path(__file__).parent / "manifest.json").read_text())
@@ -228,18 +229,11 @@ class FourSeasonsSensor(
 
         All sensors are grouped under a single device with the user's chosen name.
         """
-        mode = self._config_entry.data[CONF_MODE]
-        model = (
-            "Four Seasons (Astronomical)"
-            if mode == MODE_ASTRONOMICAL
-            else "Four Seasons (Meteorological)"
-        )
-
         return DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.entry_id)},
             name=self._config_entry.data[CONF_NAME],
             manufacturer="SolsticeHub",
-            model=model,
+            model=device_model(DEVICE_FOUR_SEASONS, self._config_entry.data),
             sw_version=VERSION,
         )
 

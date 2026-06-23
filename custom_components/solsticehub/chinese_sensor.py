@@ -26,6 +26,7 @@ from .const import (
     CHINESE_TERM_NAMES,
     CONF_NAME,
     CONF_SCOPE,
+    DEVICE_CHINESE,
     DOMAIN,
     ICON_CHINESE_TERM,
     ICON_NEXT_TERM_CHANGE,
@@ -33,6 +34,7 @@ from .const import (
     SENSOR_CURRENT_TERM,
     SENSOR_NEXT_TERM_CHANGE,
 )
+from .device import device_model
 
 # Load version from manifest.json
 MANIFEST = json.loads((Path(__file__).parent / "manifest.json").read_text())
@@ -127,18 +129,11 @@ class ChineseSolarTermsSensor(
 
         All sensors are grouped under a single device with the user's chosen name.
         """
-        scope = self._config_entry.data.get(CONF_SCOPE, "all_24")
-        model = (
-            "Chinese Solar Terms (All 24)"
-            if scope != SCOPE_8_MAJOR
-            else "Chinese Solar Terms (8 Major)"
-        )
-
         return DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.entry_id)},
             name=self._config_entry.data[CONF_NAME],
             manufacturer="SolsticeHub",
-            model=model,
+            model=device_model(DEVICE_CHINESE, self._config_entry.data),
             sw_version=VERSION,
         )
 

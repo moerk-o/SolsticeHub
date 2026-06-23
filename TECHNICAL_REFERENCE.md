@@ -131,9 +131,11 @@ Multi-step, UI-only:
    northern.
 
 The instance name is not asked in the flow: the device name defaults to the
-device type label (`DEFAULT_DEVICE_NAMES`) and the user sets it in Home
-Assistant's standard final "name and assign area" step. No unique ID is set, so
-multiple instances of the same type are allowed.
+type-plus-mode label from `device.device_model` (e.g. "Four Seasons
+(Astronomical)") and the user sets it in Home Assistant's standard final "name
+and assign area" step. `device_model` is the single source for both the default
+name and the device `model` shown on each device, so they cannot drift apart. No
+unique ID is set, so multiple instances of the same type are allowed.
 
 ---
 
@@ -151,6 +153,7 @@ custom_components/solsticehub/
 ├── __init__.py                  # entry setup/unload, routes by device type
 ├── config_flow.py               # multi-step config flow
 ├── const.py                     # constants (domain, device types, keys, icons)
+├── device.py                    # device_model: default name + device model label
 ├── calculations.py              # all astronomical calculations (pure functions)
 ├── manifest.json
 ├── coordinator.py               # Four Seasons coordinator
