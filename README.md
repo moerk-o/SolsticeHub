@@ -76,7 +76,18 @@ hemisphere/daylight-trend details, see [TECHNICAL_REFERENCE.md](TECHNICAL_REFERE
 
 ## Entities
 
-### Shared sun-data sensors (every device)
+### Shared sun-data sensors (on every device)
+
+These three sensors describe the sun itself, independent of any calendar, so
+**every device you add includes its own copy** — whether it's a Four Seasons,
+Cross-Quarter or Chinese device. That way a single device gives you both the
+calendar *and* "is the day getting longer", with no extra setup.
+
+This is deliberate: if you add several devices they will each carry these
+sensors, so you may see the daylight-trend sensors more than once. The
+duplicates are harmless and you can disable the extra ones per entity. (We chose
+this over a separate "base data" device on purpose — see the rationale in
+[TECHNICAL_REFERENCE.md](TECHNICAL_REFERENCE.md#511-adr-base-data-folded-into-every-calendar-device).)
 
 | Entity | Type | Description |
 |--------|------|-------------|
