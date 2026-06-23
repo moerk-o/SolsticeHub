@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for Solstice Season integration."""
+"""DataUpdateCoordinator for Cross-Quarter calendar."""
 
 from __future__ import annotations
 
@@ -12,8 +12,8 @@ from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .calculations import SeasonData, calculate_season_data
-from .const import CONF_HEMISPHERE, CONF_MODE, DOMAIN
+from .calculations import CrossQuarterData, calculate_cross_quarter_data
+from .const import CONF_HEMISPHERE, CONF_MODE, DOMAIN, HEMISPHERE_NORTHERN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,12 +35,11 @@ def _calculate_time_until_midnight() -> timedelta:
     return time_until
 
 
-class SolsticeSeasonCoordinator(DataUpdateCoordinator[SeasonData]):
-    """Coordinator for solstice season data.
+class CrossQuarterCoordinator(DataUpdateCoordinator[CrossQuarterData]):
+    """Coordinator for Cross-Quarter calendar data.
 
-    This coordinator manages data updates for all sensors. It calculates
-    all season-related data at local midnight and additionally at the exact
-    moment when a season change occurs.
+    This coordinator manages data updates for all Cross-Quarter sensors.
+    Updates occur at local midnight and at the exact moment of period changes.
     """
 
     config_entry: ConfigEntry
@@ -55,45 +54,46 @@ class SolsticeSeasonCoordinator(DataUpdateCoordinator[SeasonData]):
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
+            name=f"{DOMAIN}_cross_quarter",
             update_interval=_calculate_time_until_midnight(),
         )
         self.config_entry = config_entry
-        self.hemisphere: str = config_entry.data[CONF_HEMISPHERE]
         self.mode: str = config_entry.data[CONF_MODE]
+        self.hemisphere: str = config_entry.data.get(
+            CONF_HEMISPHERE, HEMISPHERE_NORTHERN
+        )
         self._unsub_event: Callable[[], None] | None = None
 
-    async def _async_update_data(self) -> SeasonData:
+    async def _async_update_data(self) -> CrossQuarterData:
         """Fetch data from calculations.
 
         This method is called by the coordinator at local midnight and
-        at the exact moment of season changes.
+        at the exact moment of period changes.
 
         Returns:
-            Dictionary containing all calculated season data.
+            Dictionary containing all calculated Cross-Quarter data.
         """
         # Schedule next update for midnight
         self.update_interval = _calculate_time_until_midnight()
 
         now = dt_util.utcnow()
         _LOGGER.debug(
-            "Updating solstice season data for %s (hemisphere=%s, mode=%s), next update in %s",
+            "Updating Cross-Quarter data for %s (mode=%s), next update in %s",
             self.config_entry.title,
-            self.hemisphere,
             self.mode,
             self.update_interval,
         )
 
         # Run calculation in executor as it may be CPU-intensive
         data = await self.hass.async_add_executor_job(
-            calculate_season_data,
+            calculate_cross_quarter_data,
             self.hemisphere,
             self.mode,
             now,
         )
 
-        # Schedule event-based update for next season change
-        self._schedule_event_update(data["next_season_change"])
+        # Schedule event-based update for next period change
+        self._schedule_event_update(data["next_period_change"])
 
         return data
 
@@ -101,7 +101,7 @@ class SolsticeSeasonCoordinator(DataUpdateCoordinator[SeasonData]):
         """Schedule an update at the exact event time.
 
         Args:
-            event_time: The datetime when the next season change occurs.
+            event_time: The datetime when the next period change occurs.
         """
         # Cancel previous event listener if exists
         if self._unsub_event:
@@ -111,7 +111,7 @@ class SolsticeSeasonCoordinator(DataUpdateCoordinator[SeasonData]):
         # Only schedule if event is in the future
         if event_time > dt_util.utcnow():
             _LOGGER.debug(
-                "Scheduling event update for %s at %s",
+                "Scheduling period change update for %s at %s",
                 self.config_entry.title,
                 event_time,
             )
@@ -124,10 +124,10 @@ class SolsticeSeasonCoordinator(DataUpdateCoordinator[SeasonData]):
     async def _handle_event_update(self, _now: datetime) -> None:
         """Handle the event-based update callback.
 
-        This is called at the exact moment of a season change.
+        This is called at the exact moment of a period change.
         """
         _LOGGER.info(
-            "Season change event triggered for %s, refreshing data",
+            "Period change event triggered for %s, refreshing data",
             self.config_entry.title,
         )
         await self.async_refresh()

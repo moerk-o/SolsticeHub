@@ -7,9 +7,8 @@ This module tests:
 """
 
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
-import pytest
 from freezegun import freeze_time
 
 # Add parent directory to path for imports
@@ -18,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "custom_components"))
 
-from solstice_season.coordinator import _calculate_time_until_midnight
+from solsticehub.coordinator import _calculate_time_until_midnight
 
 
 class TestCalculateTimeUntilMidnight:
@@ -27,7 +26,7 @@ class TestCalculateTimeUntilMidnight:
     @freeze_time("2026-02-15 10:00:00")
     def test_morning_time_until_midnight(self):
         """At 10:00, should be ~14 hours until midnight."""
-        with patch("solstice_season.coordinator.dt_util") as mock_dt:
+        with patch("solsticehub.coordinator.dt_util") as mock_dt:
             # Mock local time
             mock_dt.now.return_value = datetime(2026, 2, 15, 10, 0, 0)
 
@@ -39,7 +38,7 @@ class TestCalculateTimeUntilMidnight:
     @freeze_time("2026-02-15 18:30:00")
     def test_evening_time_until_midnight(self):
         """At 18:30, should be 5.5 hours until midnight."""
-        with patch("solstice_season.coordinator.dt_util") as mock_dt:
+        with patch("solsticehub.coordinator.dt_util") as mock_dt:
             mock_dt.now.return_value = datetime(2026, 2, 15, 18, 30, 0)
 
             result = _calculate_time_until_midnight()
@@ -49,7 +48,7 @@ class TestCalculateTimeUntilMidnight:
     @freeze_time("2026-02-15 23:30:00")
     def test_late_night_time_until_midnight(self):
         """At 23:30, should be 30 minutes until midnight."""
-        with patch("solstice_season.coordinator.dt_util") as mock_dt:
+        with patch("solsticehub.coordinator.dt_util") as mock_dt:
             mock_dt.now.return_value = datetime(2026, 2, 15, 23, 30, 0)
 
             result = _calculate_time_until_midnight()
@@ -59,7 +58,7 @@ class TestCalculateTimeUntilMidnight:
     @freeze_time("2026-02-15 23:59:30")
     def test_very_close_to_midnight_uses_minimum(self):
         """At 23:59:30, less than 1 minute to midnight, should return 24h."""
-        with patch("solstice_season.coordinator.dt_util") as mock_dt:
+        with patch("solsticehub.coordinator.dt_util") as mock_dt:
             mock_dt.now.return_value = datetime(2026, 2, 15, 23, 59, 30)
 
             result = _calculate_time_until_midnight()
@@ -70,7 +69,7 @@ class TestCalculateTimeUntilMidnight:
     @freeze_time("2026-02-15 00:00:30")
     def test_just_after_midnight(self):
         """At 00:00:30, should be almost 24 hours until next midnight."""
-        with patch("solstice_season.coordinator.dt_util") as mock_dt:
+        with patch("solsticehub.coordinator.dt_util") as mock_dt:
             mock_dt.now.return_value = datetime(2026, 2, 15, 0, 0, 30)
 
             result = _calculate_time_until_midnight()
@@ -82,7 +81,7 @@ class TestCalculateTimeUntilMidnight:
     @freeze_time("2026-02-15 12:00:00")
     def test_noon_time_until_midnight(self):
         """At noon, should be exactly 12 hours until midnight."""
-        with patch("solstice_season.coordinator.dt_util") as mock_dt:
+        with patch("solsticehub.coordinator.dt_util") as mock_dt:
             mock_dt.now.return_value = datetime(2026, 2, 15, 12, 0, 0)
 
             result = _calculate_time_until_midnight()
@@ -95,8 +94,8 @@ class TestEventScheduling:
 
     def test_schedule_event_in_future(self):
         """Event listener should be registered for future events."""
-        with patch("solstice_season.coordinator.async_track_point_in_time") as mock_track:
-            with patch("solstice_season.coordinator.dt_util") as mock_dt:
+        with patch("solsticehub.coordinator.async_track_point_in_time") as mock_track:
+            with patch("solsticehub.coordinator.dt_util") as mock_dt:
                 # Setup: current time is before event
                 now = datetime(2026, 3, 20, 10, 0, 0, tzinfo=timezone.utc)
                 event_time = datetime(2026, 3, 20, 15, 30, 0, tzinfo=timezone.utc)
@@ -108,11 +107,11 @@ class TestEventScheduling:
                 mock_config_entry.title = "Test Entry"
 
                 # Import and test
-                from solstice_season.coordinator import SolsticeSeasonCoordinator
+                from solsticehub.coordinator import SolsticeHubCoordinator
 
                 # We need to patch the parent class init
-                with patch.object(SolsticeSeasonCoordinator, "__init__", lambda self, h, c: None):
-                    coordinator = SolsticeSeasonCoordinator.__new__(SolsticeSeasonCoordinator)
+                with patch.object(SolsticeHubCoordinator, "__init__", lambda self, h, c: None):
+                    coordinator = SolsticeHubCoordinator.__new__(SolsticeHubCoordinator)
                     coordinator.hass = mock_hass
                     coordinator.config_entry = mock_config_entry
                     coordinator._unsub_event = None
@@ -127,8 +126,8 @@ class TestEventScheduling:
 
     def test_no_schedule_for_past_event(self):
         """Event listener should NOT be registered for past events."""
-        with patch("solstice_season.coordinator.async_track_point_in_time") as mock_track:
-            with patch("solstice_season.coordinator.dt_util") as mock_dt:
+        with patch("solsticehub.coordinator.async_track_point_in_time") as mock_track:
+            with patch("solsticehub.coordinator.dt_util") as mock_dt:
                 # Setup: current time is AFTER event
                 now = datetime(2026, 3, 20, 18, 0, 0, tzinfo=timezone.utc)
                 event_time = datetime(2026, 3, 20, 15, 30, 0, tzinfo=timezone.utc)
@@ -138,10 +137,10 @@ class TestEventScheduling:
                 mock_config_entry = MagicMock()
                 mock_config_entry.title = "Test Entry"
 
-                from solstice_season.coordinator import SolsticeSeasonCoordinator
+                from solsticehub.coordinator import SolsticeHubCoordinator
 
-                with patch.object(SolsticeSeasonCoordinator, "__init__", lambda self, h, c: None):
-                    coordinator = SolsticeSeasonCoordinator.__new__(SolsticeSeasonCoordinator)
+                with patch.object(SolsticeHubCoordinator, "__init__", lambda self, h, c: None):
+                    coordinator = SolsticeHubCoordinator.__new__(SolsticeHubCoordinator)
                     coordinator.hass = mock_hass
                     coordinator.config_entry = mock_config_entry
                     coordinator._unsub_event = None
@@ -153,8 +152,8 @@ class TestEventScheduling:
 
     def test_cancel_previous_event_before_scheduling_new(self):
         """Previous event listener should be cancelled before scheduling new one."""
-        with patch("solstice_season.coordinator.async_track_point_in_time") as mock_track:
-            with patch("solstice_season.coordinator.dt_util") as mock_dt:
+        with patch("solsticehub.coordinator.async_track_point_in_time") as mock_track:
+            with patch("solsticehub.coordinator.dt_util") as mock_dt:
                 now = datetime(2026, 3, 20, 10, 0, 0, tzinfo=timezone.utc)
                 event_time = datetime(2026, 3, 20, 15, 30, 0, tzinfo=timezone.utc)
                 mock_dt.utcnow.return_value = now
@@ -166,18 +165,19 @@ class TestEventScheduling:
                 # Create mock unsubscribe function
                 mock_unsub = MagicMock()
 
-                from solstice_season.coordinator import SolsticeSeasonCoordinator
+                from solsticehub.coordinator import SolsticeHubCoordinator
 
-                with patch.object(SolsticeSeasonCoordinator, "__init__", lambda self, h, c: None):
-                    coordinator = SolsticeSeasonCoordinator.__new__(SolsticeSeasonCoordinator)
+                with patch.object(SolsticeHubCoordinator, "__init__", lambda self, h, c: None):
+                    coordinator = SolsticeHubCoordinator.__new__(SolsticeHubCoordinator)
                     coordinator.hass = mock_hass
                     coordinator.config_entry = mock_config_entry
                     coordinator._unsub_event = mock_unsub  # Existing listener
 
                     coordinator._schedule_event_update(event_time)
 
-                    # Previous listener should be cancelled
+                    # Previous listener should be cancelled, new one scheduled
                     mock_unsub.assert_called_once()
+                    mock_track.assert_called_once()
 
 
 class TestAsyncUnload:
@@ -187,10 +187,10 @@ class TestAsyncUnload:
         """async_unload() should cancel registered event listener."""
         mock_unsub = MagicMock()
 
-        from solstice_season.coordinator import SolsticeSeasonCoordinator
+        from solsticehub.coordinator import SolsticeHubCoordinator
 
-        with patch.object(SolsticeSeasonCoordinator, "__init__", lambda self, h, c: None):
-            coordinator = SolsticeSeasonCoordinator.__new__(SolsticeSeasonCoordinator)
+        with patch.object(SolsticeHubCoordinator, "__init__", lambda self, h, c: None):
+            coordinator = SolsticeHubCoordinator.__new__(SolsticeHubCoordinator)
             coordinator._unsub_event = mock_unsub
 
             coordinator.async_unload()
@@ -202,10 +202,10 @@ class TestAsyncUnload:
 
     def test_unload_without_listener_is_safe(self):
         """async_unload() should not fail when no listener exists."""
-        from solstice_season.coordinator import SolsticeSeasonCoordinator
+        from solsticehub.coordinator import SolsticeHubCoordinator
 
-        with patch.object(SolsticeSeasonCoordinator, "__init__", lambda self, h, c: None):
-            coordinator = SolsticeSeasonCoordinator.__new__(SolsticeSeasonCoordinator)
+        with patch.object(SolsticeHubCoordinator, "__init__", lambda self, h, c: None):
+            coordinator = SolsticeHubCoordinator.__new__(SolsticeHubCoordinator)
             coordinator._unsub_event = None
 
             # Should not raise any exception
@@ -217,17 +217,9 @@ class TestAsyncUnload:
 class TestAllCoordinatorsHaveSamePattern:
     """Verify all coordinators implement the same update pattern."""
 
-    def test_base_data_coordinator_has_event_scheduling(self):
-        """BaseDataCoordinator should have _schedule_event_update method."""
-        from solstice_season.base_data_coordinator import BaseDataCoordinator
-
-        assert hasattr(BaseDataCoordinator, "_schedule_event_update")
-        assert hasattr(BaseDataCoordinator, "async_unload")
-        assert hasattr(BaseDataCoordinator, "_handle_event_update")
-
     def test_cross_quarter_coordinator_has_event_scheduling(self):
         """CrossQuarterCoordinator should have _schedule_event_update method."""
-        from solstice_season.cross_quarter_coordinator import CrossQuarterCoordinator
+        from solsticehub.cross_quarter_coordinator import CrossQuarterCoordinator
 
         assert hasattr(CrossQuarterCoordinator, "_schedule_event_update")
         assert hasattr(CrossQuarterCoordinator, "async_unload")
@@ -235,16 +227,16 @@ class TestAllCoordinatorsHaveSamePattern:
 
     def test_chinese_coordinator_has_event_scheduling(self):
         """ChineseSolarTermsCoordinator should have _schedule_event_update method."""
-        from solstice_season.chinese_coordinator import ChineseSolarTermsCoordinator
+        from solsticehub.chinese_coordinator import ChineseSolarTermsCoordinator
 
         assert hasattr(ChineseSolarTermsCoordinator, "_schedule_event_update")
         assert hasattr(ChineseSolarTermsCoordinator, "async_unload")
         assert hasattr(ChineseSolarTermsCoordinator, "_handle_event_update")
 
     def test_four_seasons_coordinator_has_event_scheduling(self):
-        """SolsticeSeasonCoordinator should have _schedule_event_update method."""
-        from solstice_season.coordinator import SolsticeSeasonCoordinator
+        """SolsticeHubCoordinator should have _schedule_event_update method."""
+        from solsticehub.coordinator import SolsticeHubCoordinator
 
-        assert hasattr(SolsticeSeasonCoordinator, "_schedule_event_update")
-        assert hasattr(SolsticeSeasonCoordinator, "async_unload")
-        assert hasattr(SolsticeSeasonCoordinator, "_handle_event_update")
+        assert hasattr(SolsticeHubCoordinator, "_schedule_event_update")
+        assert hasattr(SolsticeHubCoordinator, "async_unload")
+        assert hasattr(SolsticeHubCoordinator, "_handle_event_update")

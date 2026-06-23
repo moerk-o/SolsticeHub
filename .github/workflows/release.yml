@@ -9,8 +9,23 @@ permissions:
   contents: write
 
 jobs:
+  test:
+    name: "Run tests"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: "Install dependencies"
+        run: pip install -r requirements-test.txt
+      - name: "Run tests"
+        run: pytest
+
   release:
-    name: "Release solstice_season"
+    name: "Release solsticehub"
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout the repository"
@@ -18,10 +33,10 @@ jobs:
 
       - name: "Create zip package"
         run: |
-          cd "${{ github.workspace }}/custom_components/solstice_season"
-          zip solstice_season.zip -r ./
+          cd "${{ github.workspace }}/custom_components/solsticehub"
+          zip solsticehub.zip -r ./
 
       - name: "Upload zip to release"
         uses: softprops/action-gh-release@v2
         with:
-          files: ${{ github.workspace }}/custom_components/solstice_season/solstice_season.zip
+          files: ${{ github.workspace }}/custom_components/solsticehub/solsticehub.zip

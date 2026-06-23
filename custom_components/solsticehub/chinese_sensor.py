@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -18,6 +19,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .base_sensor import make_base_sensor_descriptions
 from .calculations import ChineseSolarTermsData
 from .chinese_coordinator import ChineseSolarTermsCoordinator
 from .const import (
@@ -25,6 +27,7 @@ from .const import (
     CHINESE_TERM_NAMES,
     CONF_NAME,
     CONF_SCOPE,
+    DEVICE_CHINESE,
     DOMAIN,
     ICON_CHINESE_TERM,
     ICON_NEXT_TERM_CHANGE,
@@ -32,6 +35,7 @@ from .const import (
     SENSOR_CURRENT_TERM,
     SENSOR_NEXT_TERM_CHANGE,
 )
+from .device import device_model, english_object_id
 
 # Load version from manifest.json
 MANIFEST = json.loads((Path(__file__).parent / "manifest.json").read_text())
@@ -46,6 +50,7 @@ class ChineseSolarTermsSensorEntityDescription(SensorEntityDescription):
     extra_state_attributes_fn: Callable[[ChineseSolarTermsData], dict[str, Any]] | None = (
         None
     )
+    icon_fn: Callable[[ChineseSolarTermsData], str] | None = None
 
 
 def get_chinese_sensor_descriptions(
@@ -88,7 +93,7 @@ def get_chinese_sensor_descriptions(
                 "event_type": data["next_term_event_type"],
             },
         ),
-    )
+    ) + make_base_sensor_descriptions(ChineseSolarTermsSensorEntityDescription)
 
 
 class ChineseSolarTermsSensor(
@@ -119,29 +124,27 @@ class ChineseSolarTermsSensor(
         # Set unique_id based on entry_id and sensor key
         self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
 
+        # Fully English, language-independent entity_id (see FourSeasonsSensor).
+        self.entity_id = ENTITY_ID_FORMAT.format(
+            english_object_id(DEVICE_CHINESE, config_entry.data, description.key)
+        )
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information.
 
         All sensors are grouped under a single device with the user's chosen name.
         """
-        scope = self._config_entry.data.get(CONF_SCOPE, "all_24")
-        model = (
-            "Chinese Solar Terms (All 24)"
-            if scope != SCOPE_8_MAJOR
-            else "Chinese Solar Terms (8 Major)"
-        )
-
         return DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.entry_id)},
             name=self._config_entry.data[CONF_NAME],
-            manufacturer="Solstice Season",
-            model=model,
+            manufacturer="SolsticeHub",
+            model=device_model(DEVICE_CHINESE, self._config_entry.data),
             sw_version=VERSION,
         )
 
     @property
-    def native_value(self) -> str | datetime | None:
+    def native_value(self) -> str | float | datetime | None:
         """Return the state of the sensor."""
         if self.coordinator.data is None:
             return None
@@ -166,4 +169,6 @@ class ChineseSolarTermsSensor(
     @property
     def icon(self) -> str | None:
         """Return the icon for the sensor."""
+        if self.entity_description.icon_fn is not None and self.coordinator.data:
+            return self.entity_description.icon_fn(self.coordinator.data)
         return self.entity_description.icon

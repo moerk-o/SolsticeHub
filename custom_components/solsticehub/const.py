@@ -1,8 +1,8 @@
-"""Constants for the Solstice Season integration."""
+"""Constants for the SolsticeHub integration."""
 
 from typing import Final
 
-DOMAIN: Final = "solstice_season"
+DOMAIN: Final = "solsticehub"
 
 # Configuration keys
 CONF_NAME: Final = "name"
@@ -12,11 +12,7 @@ CONF_MODE: Final = "mode"
 CONF_NAMING: Final = "naming"
 CONF_SCOPE: Final = "scope"
 
-# Default values
-DEFAULT_NAME: Final = "Home"
-
 # Device types
-DEVICE_BASE_DATA: Final = "base_data"
 DEVICE_FOUR_SEASONS: Final = "four_seasons"
 DEVICE_CROSS_QUARTER: Final = "cross_quarter"
 DEVICE_CHINESE: Final = "chinese"

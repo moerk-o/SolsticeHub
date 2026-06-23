@@ -2,23 +2,15 @@
   "config": {
     "step": {
       "user": {
-        "title": "Solstice Season konfigurieren",
+        "title": "SolsticeHub konfigurieren",
         "description": "Sonnenbasiertes Kalendersystem einrichten",
         "data": {
-          "name": "Name",
           "device_type": "Gerätetyp"
-        }
-      },
-      "base_data": {
-        "title": "Basisdaten Einstellungen",
-        "description": "Konfiguriere Basisdaten für {name}",
-        "data": {
-          "hemisphere": "Hemisphäre"
         }
       },
       "four_seasons": {
         "title": "Vier Jahreszeiten Einstellungen",
-        "description": "Konfiguriere den Vier Jahreszeiten Kalender für {name}",
+        "description": "Konfiguriere den Vier Jahreszeiten Kalender",
         "data": {
           "hemisphere": "Hemisphäre",
           "mode": "Berechnungsmodus"
@@ -26,7 +18,7 @@
       },
       "cross_quarter": {
         "title": "Cross-Quarter / Keltisch Einstellungen",
-        "description": "Konfiguriere den Cross-Quarter Kalender für {name}",
+        "description": "Konfiguriere den Cross-Quarter Kalender",
         "data": {
           "mode": "Berechnungsmodus",
           "naming": "Benennung"
@@ -34,24 +26,17 @@
       },
       "chinese": {
         "title": "Chinesische Sonnenterme Einstellungen",
-        "description": "Konfiguriere den chinesischen Sonnenterme-Kalender für {name}",
+        "description": "Konfiguriere den chinesischen Sonnenterme-Kalender",
         "data": {
           "scope": "Umfang",
           "naming": "Benennung"
         }
       }
-    },
-    "error": {
-      "already_configured": "Eine Instanz mit diesem Namen existiert bereits"
-    },
-    "abort": {
-      "already_configured": "Diese Instanz ist bereits konfiguriert"
     }
   },
   "selector": {
     "device_type": {
       "options": {
-        "base_data": "Basisdaten",
         "four_seasons": "Vier Jahreszeiten",
         "cross_quarter": "Cross-Quarter / Keltisch",
         "chinese": "Chinesische Sonnenterme"

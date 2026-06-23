@@ -1,8 +1,13 @@
-"""Config flow for Solstice Season integration.
+"""Config flow for SolsticeHub integration.
 
 This implements a multi-step config flow:
-1. Step 1 (user): Name and Device Type selection
+1. Step 1 (user): Device type selection
 2. Step 2: Device-specific options (varies by device type)
+
+The instance name is not asked here: Home Assistant's standard final step
+("name and assign area") lets the user name the device, so asking for a name
+up front would be redundant. Each device type gets a sensible default name
+that the user can override in that final step.
 """
 
 from __future__ import annotations
@@ -13,7 +18,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import selector
-from homeassistant.util import slugify
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -22,8 +26,6 @@ from .const import (
     CONF_NAME,
     CONF_NAMING,
     CONF_SCOPE,
-    DEFAULT_NAME,
-    DEVICE_BASE_DATA,
     DEVICE_CHINESE,
     DEVICE_CROSS_QUARTER,
     DEVICE_FOUR_SEASONS,
@@ -40,10 +42,11 @@ from .const import (
     SCOPE_8_MAJOR,
     SCOPE_ALL_24,
 )
+from .device import device_model
 
 
-class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Solstice Season."""
+class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for SolsticeHub."""
 
     VERSION = 1
 
@@ -54,50 +57,38 @@ class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle step 1: Name and Device Type selection.
+        """Handle step 1: Device type selection.
 
-        This is the entry point for the config flow. Users provide:
-        - A name for the instance (becomes entity prefix)
-        - The device type (Base Data, Four Seasons, Cross-Quarter, or Chinese)
+        This is the entry point for the config flow. The user only picks the
+        device type (Four Seasons, Cross-Quarter, or Chinese); the name is set
+        later in Home Assistant's standard final step.
         """
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Validate unique ID
-            unique_id = slugify(user_input[CONF_NAME])
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            device_type = user_input[CONF_DEVICE_TYPE]
 
-            # Store data for next step
-            self._data = {
-                CONF_NAME: user_input[CONF_NAME],
-                CONF_DEVICE_TYPE: user_input[CONF_DEVICE_TYPE],
-            }
+            # Store the type for the next step. The name is derived once the
+            # device-specific options are known (see device_model) and can be
+            # changed in HA's final "name and area" step.
+            self._data = {CONF_DEVICE_TYPE: device_type}
 
             # Route to device-specific step
-            device_type = user_input[CONF_DEVICE_TYPE]
-            if device_type == DEVICE_BASE_DATA:
-                return await self.async_step_base_data()
-            elif device_type == DEVICE_FOUR_SEASONS:
+            if device_type == DEVICE_FOUR_SEASONS:
                 return await self.async_step_four_seasons()
             elif device_type == DEVICE_CROSS_QUARTER:
                 return await self.async_step_cross_quarter()
             elif device_type == DEVICE_CHINESE:
                 return await self.async_step_chinese()
 
-        # Build the form schema for step 1
+        # Build the form schema for step 1: device type as radio buttons.
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Required(
                     CONF_DEVICE_TYPE, default=DEVICE_FOUR_SEASONS
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=[
-                            selector.SelectOptionDict(
-                                value=DEVICE_BASE_DATA,
-                                label="Base Data",
-                            ),
                             selector.SelectOptionDict(
                                 value=DEVICE_FOUR_SEASONS,
                                 label="Four Seasons",
@@ -111,7 +102,7 @@ class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
                                 label="Chinese Solar Terms",
                             ),
                         ],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        mode=selector.SelectSelectorMode.LIST,
                         translation_key="device_type",
                     ),
                 ),
@@ -122,60 +113,6 @@ class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=data_schema,
             errors=errors,
-        )
-
-    async def async_step_base_data(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle step 2 for Base Data device.
-
-        Options:
-        - Hemisphere (northern/southern) - affects daylight_trend
-        """
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            # Merge with data from step 1
-            self._data[CONF_HEMISPHERE] = user_input[CONF_HEMISPHERE]
-
-            return self.async_create_entry(
-                title=self._data[CONF_NAME],
-                data=self._data,
-            )
-
-        # Determine default hemisphere from Home Assistant's configured latitude
-        default_hemisphere = (
-            HEMISPHERE_NORTHERN if self.hass.config.latitude >= 0 else HEMISPHERE_SOUTHERN
-        )
-
-        data_schema = vol.Schema(
-            {
-                vol.Required(
-                    CONF_HEMISPHERE, default=default_hemisphere
-                ): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[
-                            selector.SelectOptionDict(
-                                value=HEMISPHERE_NORTHERN,
-                                label="Northern Hemisphere",
-                            ),
-                            selector.SelectOptionDict(
-                                value=HEMISPHERE_SOUTHERN,
-                                label="Southern Hemisphere",
-                            ),
-                        ],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="hemisphere",
-                    ),
-                ),
-            }
-        )
-
-        return self.async_show_form(
-            step_id="base_data",
-            data_schema=data_schema,
-            errors=errors,
-            description_placeholders={"name": self._data[CONF_NAME]},
         )
 
     async def async_step_four_seasons(
@@ -194,6 +131,9 @@ class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
             self._data[CONF_HEMISPHERE] = user_input[CONF_HEMISPHERE]
             self._data[CONF_MODE] = user_input[CONF_MODE]
 
+            self._data[CONF_NAME] = device_model(
+                DEVICE_FOUR_SEASONS, self._data, self.hass.config.language
+            )
             return self.async_create_entry(
                 title=self._data[CONF_NAME],
                 data=self._data,
@@ -249,7 +189,6 @@ class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="four_seasons",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={"name": self._data[CONF_NAME]},
         )
 
     async def async_step_cross_quarter(
@@ -270,6 +209,9 @@ class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
             # Cross-Quarter is only for Northern Hemisphere
             self._data[CONF_HEMISPHERE] = HEMISPHERE_NORTHERN
 
+            self._data[CONF_NAME] = device_model(
+                DEVICE_CROSS_QUARTER, self._data, self.hass.config.language
+            )
             return self.async_create_entry(
                 title=self._data[CONF_NAME],
                 data=self._data,
@@ -320,7 +262,6 @@ class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="cross_quarter",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={"name": self._data[CONF_NAME]},
         )
 
     async def async_step_chinese(
@@ -341,6 +282,9 @@ class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
             # Chinese calendar is hemisphere-independent (historically Northern)
             self._data[CONF_HEMISPHERE] = HEMISPHERE_NORTHERN
 
+            self._data[CONF_NAME] = device_model(
+                DEVICE_CHINESE, self._data, self.hass.config.language
+            )
             return self.async_create_entry(
                 title=self._data[CONF_NAME],
                 data=self._data,
@@ -395,5 +339,4 @@ class SolsticeSeasonConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="chinese",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={"name": self._data[CONF_NAME]},
         )

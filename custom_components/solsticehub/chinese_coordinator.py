@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for Base Data device."""
+"""DataUpdateCoordinator for Chinese Solar Terms calendar."""
 
 from __future__ import annotations
 
@@ -12,8 +12,8 @@ from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .calculations import BaseData, calculate_base_data
-from .const import CONF_HEMISPHERE, DOMAIN
+from .calculations import ChineseSolarTermsData, calculate_chinese_solar_terms_data
+from .const import CONF_HEMISPHERE, CONF_SCOPE, DOMAIN, HEMISPHERE_NORTHERN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,14 +35,11 @@ def _calculate_time_until_midnight() -> timedelta:
     return time_until
 
 
-class BaseDataCoordinator(DataUpdateCoordinator[BaseData]):
-    """Coordinator for Base Data device.
+class ChineseSolarTermsCoordinator(DataUpdateCoordinator[ChineseSolarTermsData]):
+    """Coordinator for Chinese Solar Terms calendar data.
 
-    This coordinator manages data updates for the Base Data sensors:
-    - solar_longitude: Ecliptic longitude of the Sun (hemisphere-independent)
-    - daylight_trend: Whether days are getting longer or shorter (hemisphere-dependent)
-
-    Updates occur at local midnight and at the exact moment of trend changes (solstices).
+    This coordinator manages data updates for all Chinese Solar Terms sensors.
+    Updates occur at local midnight and at the exact moment of term changes.
     """
 
     config_entry: ConfigEntry
@@ -57,42 +54,46 @@ class BaseDataCoordinator(DataUpdateCoordinator[BaseData]):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}_base_data",
+            name=f"{DOMAIN}_chinese_solar_terms",
             update_interval=_calculate_time_until_midnight(),
         )
         self.config_entry = config_entry
-        self.hemisphere: str = config_entry.data[CONF_HEMISPHERE]
+        self.scope: str = config_entry.data.get(CONF_SCOPE, "all_24")
+        self.hemisphere: str = config_entry.data.get(
+            CONF_HEMISPHERE, HEMISPHERE_NORTHERN
+        )
         self._unsub_event: Callable[[], None] | None = None
 
-    async def _async_update_data(self) -> BaseData:
+    async def _async_update_data(self) -> ChineseSolarTermsData:
         """Fetch data from calculations.
 
         This method is called by the coordinator at local midnight and
-        at the exact moment of trend changes (solstices).
+        at the exact moment of term changes.
 
         Returns:
-            Dictionary containing all calculated base data.
+            Dictionary containing all calculated Chinese Solar Terms data.
         """
         # Schedule next update for midnight
         self.update_interval = _calculate_time_until_midnight()
 
         now = dt_util.utcnow()
         _LOGGER.debug(
-            "Updating Base Data for %s (hemisphere=%s), next update in %s",
+            "Updating Chinese Solar Terms data for %s (scope=%s), next update in %s",
             self.config_entry.title,
-            self.hemisphere,
+            self.scope,
             self.update_interval,
         )
 
         # Run calculation in executor as it may be CPU-intensive
         data = await self.hass.async_add_executor_job(
-            calculate_base_data,
+            calculate_chinese_solar_terms_data,
             self.hemisphere,
+            self.scope,
             now,
         )
 
-        # Schedule event-based update for next trend change (solstice)
-        self._schedule_event_update(data["next_trend_change"])
+        # Schedule event-based update for next term change
+        self._schedule_event_update(data["next_term_change"])
 
         return data
 
@@ -100,7 +101,7 @@ class BaseDataCoordinator(DataUpdateCoordinator[BaseData]):
         """Schedule an update at the exact event time.
 
         Args:
-            event_time: The datetime when the next trend change occurs.
+            event_time: The datetime when the next term change occurs.
         """
         # Cancel previous event listener if exists
         if self._unsub_event:
@@ -110,7 +111,7 @@ class BaseDataCoordinator(DataUpdateCoordinator[BaseData]):
         # Only schedule if event is in the future
         if event_time > dt_util.utcnow():
             _LOGGER.debug(
-                "Scheduling trend change update for %s at %s",
+                "Scheduling term change update for %s at %s",
                 self.config_entry.title,
                 event_time,
             )
@@ -123,10 +124,10 @@ class BaseDataCoordinator(DataUpdateCoordinator[BaseData]):
     async def _handle_event_update(self, _now: datetime) -> None:
         """Handle the event-based update callback.
 
-        This is called at the exact moment of a trend change (solstice).
+        This is called at the exact moment of a term change.
         """
         _LOGGER.info(
-            "Trend change event triggered for %s, refreshing data",
+            "Term change event triggered for %s, refreshing data",
             self.config_entry.title,
         )
         await self.async_refresh()

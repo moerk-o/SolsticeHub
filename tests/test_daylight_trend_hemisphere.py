@@ -6,7 +6,6 @@ for the southern hemisphere.
 
 from datetime import datetime, timezone
 
-import pytest
 from freezegun import freeze_time
 
 # Add parent directory to path for imports
@@ -14,7 +13,7 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent / "custom_components"))
 
-from solstice_season.calculations import calculate_season_data
+from solsticehub.calculations import calculate_season_data
 
 
 class TestDaylightTrendHemisphere:
