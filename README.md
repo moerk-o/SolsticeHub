@@ -123,17 +123,22 @@ timezone.
 ## Migrating from Solstice Season
 
 SolsticeHub is the renamed successor of the *Solstice Season* integration. The
-Home Assistant domain changed from `solstice_season` to `solsticehub`, and Home
-Assistant cannot migrate configuration across domains. To upgrade:
+Home Assistant domain changed from `solstice_season` to `solsticehub`, so Home
+Assistant treats it as a new integration and cannot migrate your configuration
+automatically. A one-time manual switch is required:
 
-1. Remove the old **Solstice Season** integration (Settings → Devices &
-   Services). You may also remove the old HACS repository.
-2. Install **SolsticeHub** (see [Installation](#installation)).
-3. Add the device type(s) you want and repoint any automations/dashboards to
-   the new entities.
+1. *(Optional)* Note your current device type and options, and which automations
+   or dashboards use the old entities.
+2. Update to v2.0.0 (HACS shows it as an update of the same repository).
+3. Remove the old **Solstice Season** integration: Settings → Devices & Services
+   → *Solstice Season* → ⋮ → Delete.
+4. Restart Home Assistant.
+5. Add **SolsticeHub**: Settings → Devices & Services → *Add Integration* →
+   *SolsticeHub*, then choose your device type and options.
+6. Repoint your automations and dashboards to the new entities.
 
-The previous v1.x behaviour corresponds to the **Four Seasons** device type;
-the daylight-trend sensors that used to be separate are now included with it.
+Your old entities' long-term statistics / history are not carried over. The
+previous v1.x behaviour corresponds to the **Four Seasons** device type.
 
 ## Localization
 
