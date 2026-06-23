@@ -319,6 +319,39 @@ also removes the sync-drift risk the copy pattern warns about.
 collision above; the guide's mechanism does not work cleanly with this plugin
 version for this project.
 
+### 5.14 ADR: Naming and language handling
+
+**Decision:** Three independent naming layers, each with its own language source
+(see §4.1 for the mechanics):
+- **Entity IDs** are built explicitly from `device.english_object_id` — always
+  fully English, decoupled from the device name (`four_seasons_astronomical_current_season`).
+- **Entity display names** follow the viewing user's language via `translation_key`.
+- **The default instance name** is localized to the system language at setup
+  (`device_model(..., hass.config.language)`); the device **model** is the same
+  label but always English.
+
+The config flow does not ask for a name (device type only, as radio buttons);
+the user names the device in HA's standard final step.
+
+**Context:** On a German system the entity IDs came out German
+(`sensor.vier_jahreszeiten_astronomisch_current_season`). Entity IDs are
+referenced by automations and dashboards and must not depend on the language.
+The display name, however, should be localized for the user.
+
+**Why this approach:** `suggested_object_id` only fixes the ID *suffix* — with
+`has_entity_name`, HA still prepends the localized device name. Setting
+`self.entity_id` explicitly from an English label is the only way to get a fully
+English ID while keeping the display name localized. The model is treated like a
+hardware model number (stable, English); only the human-facing default name is
+localized. This mirrors the WhenHub integration's proven design.
+
+**Consequences:** Entity IDs no longer reflect a custom device name — renaming a
+device does not change its entity IDs (they stay type-based English). Multiple
+instances of the same type/mode share the ID base and get `_2`, `_3` suffixes
+from the registry. No registry migration is provided; v2.0 is a remove-and-re-add
+upgrade. A full subentry-based architecture (one service per type) was considered
+and set aside (would raise the minimum HA/Python version).
+
 ---
 
 ## 6. Resources
