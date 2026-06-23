@@ -131,7 +131,9 @@ class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
             self._data[CONF_HEMISPHERE] = user_input[CONF_HEMISPHERE]
             self._data[CONF_MODE] = user_input[CONF_MODE]
 
-            self._data[CONF_NAME] = device_model(DEVICE_FOUR_SEASONS, self._data)
+            self._data[CONF_NAME] = device_model(
+                DEVICE_FOUR_SEASONS, self._data, self.hass.config.language
+            )
             return self.async_create_entry(
                 title=self._data[CONF_NAME],
                 data=self._data,
@@ -207,7 +209,9 @@ class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
             # Cross-Quarter is only for Northern Hemisphere
             self._data[CONF_HEMISPHERE] = HEMISPHERE_NORTHERN
 
-            self._data[CONF_NAME] = device_model(DEVICE_CROSS_QUARTER, self._data)
+            self._data[CONF_NAME] = device_model(
+                DEVICE_CROSS_QUARTER, self._data, self.hass.config.language
+            )
             return self.async_create_entry(
                 title=self._data[CONF_NAME],
                 data=self._data,
@@ -278,7 +282,9 @@ class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
             # Chinese calendar is hemisphere-independent (historically Northern)
             self._data[CONF_HEMISPHERE] = HEMISPHERE_NORTHERN
 
-            self._data[CONF_NAME] = device_model(DEVICE_CHINESE, self._data)
+            self._data[CONF_NAME] = device_model(
+                DEVICE_CHINESE, self._data, self.hass.config.language
+            )
             return self.async_create_entry(
                 title=self._data[CONF_NAME],
                 data=self._data,

@@ -123,7 +123,7 @@ class CrossQuarterSensor(
             identifiers={(DOMAIN, self._config_entry.entry_id)},
             name=self._config_entry.data[CONF_NAME],
             manufacturer="SolsticeHub",
-            model=device_model(DEVICE_CROSS_QUARTER, self._config_entry.data),
+            model=device_model(DEVICE_CROSS_QUARTER, self._config_entry.data, self.hass.config.language),
             sw_version=VERSION,
         )
 

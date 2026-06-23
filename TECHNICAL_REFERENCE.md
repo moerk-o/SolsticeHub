@@ -132,10 +132,14 @@ Multi-step, UI-only:
 
 The instance name is not asked in the flow: the device name defaults to the
 type-plus-mode label from `device.device_model` (e.g. "Four Seasons
-(Astronomical)") and the user sets it in Home Assistant's standard final "name
-and assign area" step. `device_model` is the single source for both the default
-name and the device `model` shown on each device, so they cannot drift apart. No
-unique ID is set, so multiple instances of the same type are allowed.
+(Astronomical)" / "Vier Jahreszeiten (Astronomisch)") and the user sets it in
+Home Assistant's standard final "name and assign area" step. `device_model` is
+the single source for both the default name and the device `model` shown on each
+device, so they cannot drift apart. It is localized to the HA language
+(`hass.config.language`, English fallback); since config entry titles and device
+names are stored strings that HA does not re-translate, the label is built in the
+current language at setup time. No unique ID is set, so multiple instances of the
+same type are allowed.
 
 ---
 

@@ -42,8 +42,8 @@ async def _start(hass: HomeAssistant, device_type: str):
     )
 
 
-def test_device_model_labels() -> None:
-    """device_model maps each type + option to its 'Type (Mode)' label."""
+def test_device_model_labels_english() -> None:
+    """device_model maps each type + option to its English 'Type (Mode)' label."""
     assert (
         device_model(DEVICE_FOUR_SEASONS, {CONF_MODE: "astronomical"})
         == "Four Seasons (Astronomical)"
@@ -68,6 +68,34 @@ def test_device_model_labels() -> None:
         device_model(DEVICE_CHINESE, {CONF_SCOPE: "8_major"})
         == "Chinese Solar Terms (8 Major)"
     )
+
+
+def test_device_model_localization() -> None:
+    """The label is localized, with base-code and English fallbacks."""
+    data = {CONF_MODE: "astronomical"}
+    # Direct language match.
+    assert device_model(DEVICE_FOUR_SEASONS, data, "de") == "Vier Jahreszeiten (Astronomisch)"
+    assert device_model(DEVICE_FOUR_SEASONS, data, "nl") == "Vier Seizoenen (Astronomisch)"
+    # Regional code falls back to its base language.
+    assert (
+        device_model(DEVICE_FOUR_SEASONS, data, "de-DE")
+        == "Vier Jahreszeiten (Astronomisch)"
+    )
+    # Unsupported language falls back to English.
+    assert device_model(DEVICE_FOUR_SEASONS, data, "fr") == "Four Seasons (Astronomical)"
+
+
+async def test_default_name_uses_ha_language(hass: HomeAssistant) -> None:
+    """The default instance name is localized to the HA language."""
+    hass.config.language = "de"
+    result = await _start(hass, DEVICE_FOUR_SEASONS)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HEMISPHERE: "northern", CONF_MODE: "astronomical"},
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Vier Jahreszeiten (Astronomisch)"
+    assert result["data"][CONF_NAME] == "Vier Jahreszeiten (Astronomisch)"
 
 
 async def test_first_step_has_no_name_field(hass: HomeAssistant) -> None:

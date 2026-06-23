@@ -133,7 +133,7 @@ class ChineseSolarTermsSensor(
             identifiers={(DOMAIN, self._config_entry.entry_id)},
             name=self._config_entry.data[CONF_NAME],
             manufacturer="SolsticeHub",
-            model=device_model(DEVICE_CHINESE, self._config_entry.data),
+            model=device_model(DEVICE_CHINESE, self._config_entry.data, self.hass.config.language),
             sw_version=VERSION,
         )
 
