@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -40,13 +41,13 @@ from .const import (
     CONF_SCOPE,
     DEVICE_CHINESE,
     DEVICE_CROSS_QUARTER,
+    DEVICE_FOUR_SEASONS,
     DOMAIN,
     ICON_AUTUMN,
     ICON_NEXT_SEASON_CHANGE,
     ICON_SPRING,
     ICON_SUMMER,
     ICON_WINTER,
-    MODE_ASTRONOMICAL,
     SEASON_ICONS,
     SENSOR_AUTUMN_EQUINOX,
     SENSOR_CURRENT_SEASON,
@@ -57,6 +58,7 @@ from .const import (
 )
 from .coordinator import SolsticeHubCoordinator
 from .cross_quarter_sensor import CROSS_QUARTER_SENSOR_DESCRIPTIONS, CrossQuarterSensor
+from .device import device_model, english_object_id
 
 # Load version from manifest.json
 MANIFEST = json.loads((Path(__file__).parent / "manifest.json").read_text())
@@ -222,24 +224,24 @@ class FourSeasonsSensor(
         # Set unique_id based on entry_id and sensor key
         self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
 
+        # Build a fully English, language-independent entity_id from the device
+        # type/mode label (not the localized device name), so entity IDs never
+        # change with the system language and stay predictable for automations.
+        self.entity_id = ENTITY_ID_FORMAT.format(
+            english_object_id(DEVICE_FOUR_SEASONS, config_entry.data, description.key)
+        )
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information.
 
         All sensors are grouped under a single device with the user's chosen name.
         """
-        mode = self._config_entry.data[CONF_MODE]
-        model = (
-            "Four Seasons (Astronomical)"
-            if mode == MODE_ASTRONOMICAL
-            else "Four Seasons (Meteorological)"
-        )
-
         return DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.entry_id)},
             name=self._config_entry.data[CONF_NAME],
             manufacturer="SolsticeHub",
-            model=model,
+            model=device_model(DEVICE_FOUR_SEASONS, self._config_entry.data),
             sw_version=VERSION,
         )
 

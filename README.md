@@ -126,8 +126,14 @@ the daylight-trend sensors that used to be separate are now included with it.
 
 ## Localization
 
-Sensor names and states are translated via Home Assistant's translation system.
-Currently supported: English (fallback), German, Dutch.
+Sensor display names and states are translated via Home Assistant's translation
+system, following your user language. Currently supported: English (fallback),
+German, Dutch. The default device name suggested on setup follows your Home
+Assistant **system** language.
+
+**Entity IDs are always English** (e.g. `sensor.four_seasons_astronomical_current_season`),
+regardless of the language — so automations and dashboards keep working if you
+change the language.
 
 ## Documentation
 

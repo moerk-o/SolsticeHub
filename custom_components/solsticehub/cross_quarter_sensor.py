@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -25,13 +26,14 @@ from .const import (
     CONF_NAME,
     CROSS_QUARTER_ICONS,
     CROSS_QUARTER_PERIODS,
+    DEVICE_CROSS_QUARTER,
     DOMAIN,
     ICON_NEXT_PERIOD_CHANGE,
-    MODE_ASTRONOMICAL,
     SENSOR_CURRENT_PERIOD,
     SENSOR_NEXT_PERIOD_CHANGE,
 )
 from .cross_quarter_coordinator import CrossQuarterCoordinator
+from .device import device_model, english_object_id
 
 # Load version from manifest.json
 MANIFEST = json.loads((Path(__file__).parent / "manifest.json").read_text())
@@ -112,24 +114,22 @@ class CrossQuarterSensor(
         # Set unique_id based on entry_id and sensor key
         self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
 
+        # Fully English, language-independent entity_id (see FourSeasonsSensor).
+        self.entity_id = ENTITY_ID_FORMAT.format(
+            english_object_id(DEVICE_CROSS_QUARTER, config_entry.data, description.key)
+        )
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information.
 
         All sensors are grouped under a single device with the user's chosen name.
         """
-        mode = self._config_entry.data[CONF_MODE]
-        model = (
-            "Cross-Quarter (Astronomical)"
-            if mode == MODE_ASTRONOMICAL
-            else "Cross-Quarter (Traditional)"
-        )
-
         return DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.entry_id)},
             name=self._config_entry.data[CONF_NAME],
             manufacturer="SolsticeHub",
-            model=model,
+            model=device_model(DEVICE_CROSS_QUARTER, self._config_entry.data),
             sw_version=VERSION,
         )
 

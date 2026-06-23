@@ -14,7 +14,6 @@ from homeassistant.data_entry_flow import FlowResultType
 
 sys.path.insert(0, str(Path(__file__).parent.parent / "custom_components"))
 
-from solsticehub.config_flow import DEFAULT_DEVICE_NAMES  # noqa: E402
 from solsticehub.const import (  # noqa: E402
     CONF_DEVICE_TYPE,
     CONF_HEMISPHERE,
@@ -27,6 +26,7 @@ from solsticehub.const import (  # noqa: E402
     DEVICE_FOUR_SEASONS,
     DOMAIN,
 )
+from solsticehub.device import device_model, english_object_id  # noqa: E402
 
 
 async def _start(hass: HomeAssistant, device_type: str):
@@ -39,6 +39,75 @@ async def _start(hass: HomeAssistant, device_type: str):
     return await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_DEVICE_TYPE: device_type},
+    )
+
+
+def test_device_model_labels_english() -> None:
+    """device_model maps each type + option to its English 'Type (Mode)' label."""
+    assert (
+        device_model(DEVICE_FOUR_SEASONS, {CONF_MODE: "astronomical"})
+        == "Four Seasons (Astronomical)"
+    )
+    assert (
+        device_model(DEVICE_FOUR_SEASONS, {CONF_MODE: "meteorological"})
+        == "Four Seasons (Meteorological)"
+    )
+    assert (
+        device_model(DEVICE_CROSS_QUARTER, {CONF_MODE: "astronomical"})
+        == "Cross-Quarter (Astronomical)"
+    )
+    assert (
+        device_model(DEVICE_CROSS_QUARTER, {CONF_MODE: "traditional"})
+        == "Cross-Quarter (Traditional)"
+    )
+    assert (
+        device_model(DEVICE_CHINESE, {CONF_SCOPE: "all_24"})
+        == "Chinese Solar Terms (All 24)"
+    )
+    assert (
+        device_model(DEVICE_CHINESE, {CONF_SCOPE: "8_major"})
+        == "Chinese Solar Terms (8 Major)"
+    )
+
+
+def test_device_model_localization() -> None:
+    """The label is localized, with base-code and English fallbacks."""
+    data = {CONF_MODE: "astronomical"}
+    # Direct language match.
+    assert device_model(DEVICE_FOUR_SEASONS, data, "de") == "Vier Jahreszeiten (Astronomisch)"
+    assert device_model(DEVICE_FOUR_SEASONS, data, "nl") == "Vier Seizoenen (Astronomisch)"
+    # Regional code falls back to its base language.
+    assert (
+        device_model(DEVICE_FOUR_SEASONS, data, "de-DE")
+        == "Vier Jahreszeiten (Astronomisch)"
+    )
+    # Unsupported language falls back to English.
+    assert device_model(DEVICE_FOUR_SEASONS, data, "fr") == "Four Seasons (Astronomical)"
+
+
+async def test_default_name_uses_ha_language(hass: HomeAssistant) -> None:
+    """The default instance name is localized to the HA language."""
+    hass.config.language = "de"
+    result = await _start(hass, DEVICE_FOUR_SEASONS)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HEMISPHERE: "northern", CONF_MODE: "astronomical"},
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Vier Jahreszeiten (Astronomisch)"
+    assert result["data"][CONF_NAME] == "Vier Jahreszeiten (Astronomisch)"
+
+
+def test_english_object_id_is_language_independent() -> None:
+    """The entity object_id is fully English, regardless of the device name."""
+    data = {CONF_MODE: "astronomical"}
+    assert (
+        english_object_id(DEVICE_FOUR_SEASONS, data, "current_season")
+        == "four_seasons_astronomical_current_season"
+    )
+    assert (
+        english_object_id(DEVICE_CHINESE, {CONF_SCOPE: "8_major"}, "current_term")
+        == "chinese_solar_terms_8_major_current_term"
     )
 
 
@@ -62,9 +131,9 @@ async def test_four_seasons_flow(hass: HomeAssistant) -> None:
         {CONF_HEMISPHERE: "northern", CONF_MODE: "astronomical"},
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_DEVICE_NAMES[DEVICE_FOUR_SEASONS]
+    assert result["title"] == "Four Seasons (Astronomical)"
     assert result["data"] == {
-        CONF_NAME: DEFAULT_DEVICE_NAMES[DEVICE_FOUR_SEASONS],
+        CONF_NAME: "Four Seasons (Astronomical)",
         CONF_DEVICE_TYPE: DEVICE_FOUR_SEASONS,
         CONF_HEMISPHERE: "northern",
         CONF_MODE: "astronomical",
@@ -81,7 +150,7 @@ async def test_cross_quarter_flow(hass: HomeAssistant) -> None:
         {CONF_MODE: "traditional", CONF_NAMING: "celtic"},
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_DEVICE_NAMES[DEVICE_CROSS_QUARTER]
+    assert result["title"] == "Cross-Quarter (Traditional)"
     assert result["data"][CONF_DEVICE_TYPE] == DEVICE_CROSS_QUARTER
     assert result["data"][CONF_MODE] == "traditional"
     assert result["data"][CONF_NAMING] == "celtic"
@@ -98,7 +167,7 @@ async def test_chinese_flow(hass: HomeAssistant) -> None:
         {CONF_SCOPE: "8_major", CONF_NAMING: "pinyin"},
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == DEFAULT_DEVICE_NAMES[DEVICE_CHINESE]
+    assert result["title"] == "Chinese Solar Terms (8 Major)"
     assert result["data"][CONF_DEVICE_TYPE] == DEVICE_CHINESE
     assert result["data"][CONF_SCOPE] == "8_major"
     assert result["data"][CONF_NAMING] == "pinyin"

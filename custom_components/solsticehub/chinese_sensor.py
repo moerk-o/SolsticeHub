@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -26,6 +27,7 @@ from .const import (
     CHINESE_TERM_NAMES,
     CONF_NAME,
     CONF_SCOPE,
+    DEVICE_CHINESE,
     DOMAIN,
     ICON_CHINESE_TERM,
     ICON_NEXT_TERM_CHANGE,
@@ -33,6 +35,7 @@ from .const import (
     SENSOR_CURRENT_TERM,
     SENSOR_NEXT_TERM_CHANGE,
 )
+from .device import device_model, english_object_id
 
 # Load version from manifest.json
 MANIFEST = json.loads((Path(__file__).parent / "manifest.json").read_text())
@@ -121,24 +124,22 @@ class ChineseSolarTermsSensor(
         # Set unique_id based on entry_id and sensor key
         self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
 
+        # Fully English, language-independent entity_id (see FourSeasonsSensor).
+        self.entity_id = ENTITY_ID_FORMAT.format(
+            english_object_id(DEVICE_CHINESE, config_entry.data, description.key)
+        )
+
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information.
 
         All sensors are grouped under a single device with the user's chosen name.
         """
-        scope = self._config_entry.data.get(CONF_SCOPE, "all_24")
-        model = (
-            "Chinese Solar Terms (All 24)"
-            if scope != SCOPE_8_MAJOR
-            else "Chinese Solar Terms (8 Major)"
-        )
-
         return DeviceInfo(
             identifiers={(DOMAIN, self._config_entry.entry_id)},
             name=self._config_entry.data[CONF_NAME],
             manufacturer="SolsticeHub",
-            model=model,
+            model=device_model(DEVICE_CHINESE, self._config_entry.data),
             sw_version=VERSION,
         )
 

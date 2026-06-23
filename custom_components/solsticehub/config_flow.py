@@ -42,14 +42,7 @@ from .const import (
     SCOPE_8_MAJOR,
     SCOPE_ALL_24,
 )
-
-# Default device name per type, used as the prefilled value in Home Assistant's
-# final "name and assign area" step. The user can override it there.
-DEFAULT_DEVICE_NAMES = {
-    DEVICE_FOUR_SEASONS: "Four Seasons",
-    DEVICE_CROSS_QUARTER: "Cross-Quarter",
-    DEVICE_CHINESE: "Chinese Solar Terms",
-}
+from .device import device_model
 
 
 class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -75,12 +68,10 @@ class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             device_type = user_input[CONF_DEVICE_TYPE]
 
-            # Store data for next step. The name defaults to the device type
-            # label and can be changed in HA's final "name and area" step.
-            self._data = {
-                CONF_NAME: DEFAULT_DEVICE_NAMES[device_type],
-                CONF_DEVICE_TYPE: device_type,
-            }
+            # Store the type for the next step. The name is derived once the
+            # device-specific options are known (see device_model) and can be
+            # changed in HA's final "name and area" step.
+            self._data = {CONF_DEVICE_TYPE: device_type}
 
             # Route to device-specific step
             if device_type == DEVICE_FOUR_SEASONS:
@@ -140,6 +131,9 @@ class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
             self._data[CONF_HEMISPHERE] = user_input[CONF_HEMISPHERE]
             self._data[CONF_MODE] = user_input[CONF_MODE]
 
+            self._data[CONF_NAME] = device_model(
+                DEVICE_FOUR_SEASONS, self._data, self.hass.config.language
+            )
             return self.async_create_entry(
                 title=self._data[CONF_NAME],
                 data=self._data,
@@ -215,6 +209,9 @@ class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
             # Cross-Quarter is only for Northern Hemisphere
             self._data[CONF_HEMISPHERE] = HEMISPHERE_NORTHERN
 
+            self._data[CONF_NAME] = device_model(
+                DEVICE_CROSS_QUARTER, self._data, self.hass.config.language
+            )
             return self.async_create_entry(
                 title=self._data[CONF_NAME],
                 data=self._data,
@@ -285,6 +282,9 @@ class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
             # Chinese calendar is hemisphere-independent (historically Northern)
             self._data[CONF_HEMISPHERE] = HEMISPHERE_NORTHERN
 
+            self._data[CONF_NAME] = device_model(
+                DEVICE_CHINESE, self._data, self.hass.config.language
+            )
             return self.async_create_entry(
                 title=self._data[CONF_NAME],
                 data=self._data,

@@ -11,6 +11,7 @@ import pytest
 from freezegun import freeze_time
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -59,6 +60,58 @@ def _state_for(hass: HomeAssistant, entry: MockConfigEntry, suffix: str):
         if e.unique_id.endswith(suffix):
             return hass.states.get(e.entity_id)
     return None
+
+
+@pytest.mark.parametrize("language", ["en", "de"])
+async def test_entity_ids_are_fully_english(hass: HomeAssistant, language) -> None:
+    """Entity IDs are fully English and independent of the localized device name.
+
+    Even with a non-English device name and a German system, the entity_id is
+    built from the English device type/mode label, not the device name.
+    """
+    hass.config.language = language
+    entry = await _setup(
+        hass,
+        {
+            "name": "Schöner Garten",  # non-English device name
+            "device_type": "four_seasons",
+            "hemisphere": "northern",
+            "mode": "astronomical",
+        },
+    )
+
+    registry = er.async_get(hass)
+    entity_ids = [
+        e.entity_id
+        for e in er.async_entries_for_config_entry(registry, entry.entry_id)
+    ]
+    # Every entity ID is the English type/mode prefix + English sensor key.
+    for suffix in FOUR_SEASONS_SUFFIXES:
+        assert f"sensor.four_seasons_astronomical_{suffix}" in entity_ids, (
+            suffix,
+            entity_ids,
+        )
+    # Neither the device name nor a translated entity name leaked into the IDs.
+    joined = " ".join(entity_ids)
+    assert "garten" not in joined
+    assert "jahreszeit" not in joined
+    assert "sonnenwende" not in joined
+
+
+async def test_device_model_stays_english_on_german_system(hass: HomeAssistant) -> None:
+    """The device model is a stable English identifier, never localized."""
+    hass.config.language = "de"
+    entry = await _setup(
+        hass,
+        {
+            "name": "Home",
+            "device_type": "four_seasons",
+            "hemisphere": "northern",
+            "mode": "astronomical",
+        },
+    )
+    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    assert device.model == "Four Seasons (Astronomical)"
 
 
 @pytest.mark.parametrize("hemisphere", ["northern", "southern"])
