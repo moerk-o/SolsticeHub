@@ -224,6 +224,16 @@ class FourSeasonsSensor(
         self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
 
     @property
+    def suggested_object_id(self) -> str | None:
+        """Use the English sensor key so entity IDs stay language-independent.
+
+        Without this, the entity_id would be derived from the translated entity
+        name (e.g. ``current_season`` vs ``aktuelle_jahreszeit``), which would
+        differ per system language and break automations on a language change.
+        """
+        return self.entity_description.key
+
+    @property
     def device_info(self) -> DeviceInfo:
         """Return device information.
 
@@ -233,7 +243,7 @@ class FourSeasonsSensor(
             identifiers={(DOMAIN, self._config_entry.entry_id)},
             name=self._config_entry.data[CONF_NAME],
             manufacturer="SolsticeHub",
-            model=device_model(DEVICE_FOUR_SEASONS, self._config_entry.data, self.hass.config.language),
+            model=device_model(DEVICE_FOUR_SEASONS, self._config_entry.data),
             sw_version=VERSION,
         )
 

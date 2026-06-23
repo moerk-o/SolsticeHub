@@ -131,15 +131,31 @@ Multi-step, UI-only:
    northern.
 
 The instance name is not asked in the flow: the device name defaults to the
-type-plus-mode label from `device.device_model` (e.g. "Four Seasons
-(Astronomical)" / "Vier Jahreszeiten (Astronomisch)") and the user sets it in
-Home Assistant's standard final "name and assign area" step. `device_model` is
-the single source for both the default name and the device `model` shown on each
-device, so they cannot drift apart. It is localized to the HA language
-(`hass.config.language`, English fallback); since config entry titles and device
-names are stored strings that HA does not re-translate, the label is built in the
-current language at setup time. No unique ID is set, so multiple instances of the
-same type are allowed.
+type-plus-mode label from `device.device_model` and the user sets it in Home
+Assistant's standard final "name and assign area" step. No unique ID is set, so
+multiple instances of the same type are allowed.
+
+### 4.1 Language handling
+
+Three independent layers, each with a different language source:
+
+| Layer | Example | Language follows | Mechanism |
+|-------|---------|------------------|-----------|
+| Entity ID | `sensor.home_current_season` | none — always English | `suggested_object_id` returns the English `entity_description.key` |
+| Entity display name | "Current Season" / "Aktuelle Jahreszeit" | viewing user (live) | `translation_key` + `_attr_has_entity_name` |
+| Default instance name | "Four Seasons (Astronomical)" / "Vier Jahreszeiten (Astronomisch)" | system language at setup | `device_model(..., hass.config.language)`, English fallback |
+
+`device.device_model` is the single source for both the localized default name
+*and* the device `model`. The default name is built in the system language
+(`hass.config.language`) because config entry titles and device names are stored
+strings HA does not re-translate. The device `model`, by contrast, is a stable
+identifier and is always English (`device_model` called without a language) —
+like a hardware model number, it is not localized.
+
+Entity IDs must never depend on the language: without `suggested_object_id` HA
+would derive them from the translated entity name (`aktuelle_jahreszeit` on a
+German system), which would break automations on a language change. Each sensor
+class therefore overrides `suggested_object_id` to return the English key.
 
 ---
 

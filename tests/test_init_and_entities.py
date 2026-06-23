@@ -11,6 +11,7 @@ import pytest
 from freezegun import freeze_time
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -59,6 +60,52 @@ def _state_for(hass: HomeAssistant, entry: MockConfigEntry, suffix: str):
         if e.unique_id.endswith(suffix):
             return hass.states.get(e.entity_id)
     return None
+
+
+@pytest.mark.parametrize("language", ["en", "de"])
+async def test_entity_ids_are_language_independent(
+    hass: HomeAssistant, language
+) -> None:
+    """Entity IDs use the English sensor keys regardless of system language."""
+    hass.config.language = language
+    entry = await _setup(
+        hass,
+        {
+            "name": "Home",
+            "device_type": "four_seasons",
+            "hemisphere": "northern",
+            "mode": "astronomical",
+        },
+    )
+
+    registry = er.async_get(hass)
+    entity_ids = [
+        e.entity_id
+        for e in er.async_entries_for_config_entry(registry, entry.entry_id)
+    ]
+    # Every entity ID ends with its English sensor key...
+    for suffix in FOUR_SEASONS_SUFFIXES:
+        assert any(eid.endswith(suffix) for eid in entity_ids), (suffix, entity_ids)
+    # ...and no translated (German) entity-name slug leaked into the IDs.
+    joined = " ".join(entity_ids)
+    assert "jahreszeit" not in joined
+    assert "sonnenwende" not in joined
+
+
+async def test_device_model_stays_english_on_german_system(hass: HomeAssistant) -> None:
+    """The device model is a stable English identifier, never localized."""
+    hass.config.language = "de"
+    entry = await _setup(
+        hass,
+        {
+            "name": "Home",
+            "device_type": "four_seasons",
+            "hemisphere": "northern",
+            "mode": "astronomical",
+        },
+    )
+    device = dr.async_get(hass).async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    assert device.model == "Four Seasons (Astronomical)"
 
 
 @pytest.mark.parametrize("hemisphere", ["northern", "southern"])
