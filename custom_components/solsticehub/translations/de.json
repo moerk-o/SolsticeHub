@@ -5,13 +5,12 @@
         "title": "SolsticeHub konfigurieren",
         "description": "Sonnenbasiertes Kalendersystem einrichten",
         "data": {
-          "name": "Name",
           "device_type": "Gerätetyp"
         }
       },
       "four_seasons": {
         "title": "Vier Jahreszeiten Einstellungen",
-        "description": "Konfiguriere den Vier Jahreszeiten Kalender für {name}",
+        "description": "Konfiguriere den Vier Jahreszeiten Kalender",
         "data": {
           "hemisphere": "Hemisphäre",
           "mode": "Berechnungsmodus"
@@ -19,7 +18,7 @@
       },
       "cross_quarter": {
         "title": "Cross-Quarter / Keltisch Einstellungen",
-        "description": "Konfiguriere den Cross-Quarter Kalender für {name}",
+        "description": "Konfiguriere den Cross-Quarter Kalender",
         "data": {
           "mode": "Berechnungsmodus",
           "naming": "Benennung"
@@ -27,18 +26,12 @@
       },
       "chinese": {
         "title": "Chinesische Sonnenterme Einstellungen",
-        "description": "Konfiguriere den chinesischen Sonnenterme-Kalender für {name}",
+        "description": "Konfiguriere den chinesischen Sonnenterme-Kalender",
         "data": {
           "scope": "Umfang",
           "naming": "Benennung"
         }
       }
-    },
-    "error": {
-      "already_configured": "Eine Instanz mit diesem Namen existiert bereits"
-    },
-    "abort": {
-      "already_configured": "Diese Instanz ist bereits konfiguriert"
     }
   },
   "selector": {

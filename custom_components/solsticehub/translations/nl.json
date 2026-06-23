@@ -5,13 +5,12 @@
         "title": "SolsticeHub configureren",
         "description": "Stel een op de zon gebaseerd kalendersysteem in",
         "data": {
-          "name": "Naam",
           "device_type": "Apparaattype"
         }
       },
       "four_seasons": {
         "title": "Vier Seizoenen Instellingen",
-        "description": "Configureer de Vier Seizoenen kalender voor {name}",
+        "description": "Configureer de Vier Seizoenen kalender",
         "data": {
           "hemisphere": "Halfrond",
           "mode": "Berekeningsmodus"
@@ -19,7 +18,7 @@
       },
       "cross_quarter": {
         "title": "Cross-Quarter / Keltisch Instellingen",
-        "description": "Configureer de Cross-Quarter kalender voor {name}",
+        "description": "Configureer de Cross-Quarter kalender",
         "data": {
           "mode": "Berekeningsmodus",
           "naming": "Naamstijl"
@@ -27,18 +26,12 @@
       },
       "chinese": {
         "title": "Chinese Zonnetermijnen Instellingen",
-        "description": "Configureer de Chinese Zonnetermijnen kalender voor {name}",
+        "description": "Configureer de Chinese Zonnetermijnen kalender",
         "data": {
           "scope": "Omvang",
           "naming": "Naamstijl"
         }
       }
-    },
-    "error": {
-      "already_configured": "Een instantie met deze naam bestaat al"
-    },
-    "abort": {
-      "already_configured": "Deze instantie is al geconfigureerd"
     }
   },
   "selector": {
