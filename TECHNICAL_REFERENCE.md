@@ -124,11 +124,16 @@ binary search. The "8 major" scope keeps only the seasonal markers (the four
 
 Multi-step, UI-only:
 
-1. **user** — name + device type.
+1. **user** — device type only (rendered as radio buttons).
 2. Device-specific step (`four_seasons` / `cross_quarter` / `chinese`) collecting
    the options from the README configuration table. The hemisphere is fixed at
    this point (no runtime changes); Cross-Quarter and Chinese default to
-   northern. The unique ID is `slugify(name)`, preventing duplicates.
+   northern.
+
+The instance name is not asked in the flow: the device name defaults to the
+device type label (`DEFAULT_DEVICE_NAMES`) and the user sets it in Home
+Assistant's standard final "name and assign area" step. No unique ID is set, so
+multiple instances of the same type are allowed.
 
 ---
 

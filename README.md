@@ -54,8 +54,9 @@ trend change (the next solstice), and a diagnostic solar-longitude sensor
 
 ## Configuration
 
-Configuration is done entirely through the UI. Step 1 asks for a name and the
-device type; step 2 collects type-specific options.
+Configuration is done entirely through the UI. Step 1 asks for the device type;
+step 2 collects type-specific options. You name the device (and assign an area)
+in Home Assistant's standard final step.
 
 | Device type | Options |
 |-------------|---------|

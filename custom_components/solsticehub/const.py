@@ -12,9 +12,6 @@ CONF_MODE: Final = "mode"
 CONF_NAMING: Final = "naming"
 CONF_SCOPE: Final = "scope"
 
-# Default values
-DEFAULT_NAME: Final = "Home"
-
 # Device types
 DEVICE_FOUR_SEASONS: Final = "four_seasons"
 DEVICE_CROSS_QUARTER: Final = "cross_quarter"

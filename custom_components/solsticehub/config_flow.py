@@ -1,8 +1,13 @@
 """Config flow for SolsticeHub integration.
 
 This implements a multi-step config flow:
-1. Step 1 (user): Name and Device Type selection
+1. Step 1 (user): Device type selection
 2. Step 2: Device-specific options (varies by device type)
+
+The instance name is not asked here: Home Assistant's standard final step
+("name and assign area") lets the user name the device, so asking for a name
+up front would be redundant. Each device type gets a sensible default name
+that the user can override in that final step.
 """
 
 from __future__ import annotations
@@ -13,7 +18,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import selector
-from homeassistant.util import slugify
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -22,7 +26,6 @@ from .const import (
     CONF_NAME,
     CONF_NAMING,
     CONF_SCOPE,
-    DEFAULT_NAME,
     DEVICE_CHINESE,
     DEVICE_CROSS_QUARTER,
     DEVICE_FOUR_SEASONS,
@@ -40,6 +43,14 @@ from .const import (
     SCOPE_ALL_24,
 )
 
+# Default device name per type, used as the prefilled value in Home Assistant's
+# final "name and assign area" step. The user can override it there.
+DEFAULT_DEVICE_NAMES = {
+    DEVICE_FOUR_SEASONS: "Four Seasons",
+    DEVICE_CROSS_QUARTER: "Cross-Quarter",
+    DEVICE_CHINESE: "Chinese Solar Terms",
+}
+
 
 class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SolsticeHub."""
@@ -53,28 +64,25 @@ class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle step 1: Name and Device Type selection.
+        """Handle step 1: Device type selection.
 
-        This is the entry point for the config flow. Users provide:
-        - A name for the instance (becomes entity prefix)
-        - The device type (Base Data, Four Seasons, Cross-Quarter, or Chinese)
+        This is the entry point for the config flow. The user only picks the
+        device type (Four Seasons, Cross-Quarter, or Chinese); the name is set
+        later in Home Assistant's standard final step.
         """
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Validate unique ID
-            unique_id = slugify(user_input[CONF_NAME])
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            device_type = user_input[CONF_DEVICE_TYPE]
 
-            # Store data for next step
+            # Store data for next step. The name defaults to the device type
+            # label and can be changed in HA's final "name and area" step.
             self._data = {
-                CONF_NAME: user_input[CONF_NAME],
-                CONF_DEVICE_TYPE: user_input[CONF_DEVICE_TYPE],
+                CONF_NAME: DEFAULT_DEVICE_NAMES[device_type],
+                CONF_DEVICE_TYPE: device_type,
             }
 
             # Route to device-specific step
-            device_type = user_input[CONF_DEVICE_TYPE]
             if device_type == DEVICE_FOUR_SEASONS:
                 return await self.async_step_four_seasons()
             elif device_type == DEVICE_CROSS_QUARTER:
@@ -82,10 +90,9 @@ class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
             elif device_type == DEVICE_CHINESE:
                 return await self.async_step_chinese()
 
-        # Build the form schema for step 1
+        # Build the form schema for step 1: device type as radio buttons.
         data_schema = vol.Schema(
             {
-                vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                 vol.Required(
                     CONF_DEVICE_TYPE, default=DEVICE_FOUR_SEASONS
                 ): selector.SelectSelector(
@@ -104,7 +111,7 @@ class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
                                 label="Chinese Solar Terms",
                             ),
                         ],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        mode=selector.SelectSelectorMode.LIST,
                         translation_key="device_type",
                     ),
                 ),
@@ -188,7 +195,6 @@ class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="four_seasons",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={"name": self._data[CONF_NAME]},
         )
 
     async def async_step_cross_quarter(
@@ -259,7 +265,6 @@ class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="cross_quarter",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={"name": self._data[CONF_NAME]},
         )
 
     async def async_step_chinese(
@@ -334,5 +339,4 @@ class SolsticeHubConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="chinese",
             data_schema=data_schema,
             errors=errors,
-            description_placeholders={"name": self._data[CONF_NAME]},
         )

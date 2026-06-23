@@ -5,13 +5,12 @@
         "title": "Configure SolsticeHub",
         "description": "Set up a sun-based calendar system",
         "data": {
-          "name": "Name",
           "device_type": "Device Type"
         }
       },
       "four_seasons": {
         "title": "Four Seasons Settings",
-        "description": "Configure the Four Seasons calendar for {name}",
+        "description": "Configure the Four Seasons calendar",
         "data": {
           "hemisphere": "Hemisphere",
           "mode": "Calculation mode"
@@ -19,7 +18,7 @@
       },
       "cross_quarter": {
         "title": "Cross-Quarter / Celtic Settings",
-        "description": "Configure the Cross-Quarter calendar for {name}",
+        "description": "Configure the Cross-Quarter calendar",
         "data": {
           "mode": "Calculation mode",
           "naming": "Naming style"
@@ -27,18 +26,12 @@
       },
       "chinese": {
         "title": "Chinese Solar Terms Settings",
-        "description": "Configure the Chinese Solar Terms calendar for {name}",
+        "description": "Configure the Chinese Solar Terms calendar",
         "data": {
           "scope": "Scope",
           "naming": "Naming style"
         }
       }
-    },
-    "error": {
-      "already_configured": "An instance with this name already exists"
-    },
-    "abort": {
-      "already_configured": "This instance is already configured"
     }
   },
   "selector": {
