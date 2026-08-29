@@ -1,7 +1,7 @@
 # Technical Reference: SolsticeHub
 
-**Version:** 2.0.0
-**Stand:** June 2026
+**Version:** 2.1.0
+**Stand:** August 2026
 **Target Platform:** Home Assistant Custom Integration
 **Development Language:** English (code, comments, variables)
 **Translations:** English (fallback), German, Dutch
@@ -162,6 +162,17 @@ type/mode label plus the English sensor key (`four_seasons_astronomical_current_
 The display name still follows the viewing user's language via `translation_key`;
 only the entity_id is forced English. (No registry migration is provided — v2.0
 is a remove-and-re-add upgrade, so entities are recreated with the new IDs.)
+
+**Naming styles select the translation key.** The Cross-Quarter and Chinese
+enum sensors respect the configured naming option by switching the entity's
+`translation_key` in `__init__` (`_attr_translation_key`): `current_period` vs.
+`current_period_celtic`, and `current_term` vs. `current_term_pinyin` /
+`current_term_hanzi`. The "system" style maps to the base key with
+language-dependent descriptive state names; the Celtic/Pinyin/Hanzi keys carry
+identical state names in every translation file, making those styles
+language-independent. The enum state values themselves are always the English
+keys, so only the displayed names change (issue #10 regression: the option was
+stored but never applied).
 
 ---
 
@@ -379,5 +390,6 @@ changelog for the v2.x line; v1.x history is archived in RELEASENOTES_v1.md.
 
 | Doc version | Date | Change |
 |-------------|------|--------|
+| 2.1.0 | August 2026 | Naming styles: translation-key switching for Cross-Quarter/Chinese enum sensors (issue #10 fix) |
 | 2.0.0 | June 2026 | Rewrite for SolsticeHub: device-type architecture, Cross-Quarter & Chinese calendars, shared base data, ADRs, domain rename, test-loading deviation |
 | 1.5.0 | December 2025 | Final Solstice Season (v1.x) reference |

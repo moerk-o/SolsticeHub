@@ -24,11 +24,13 @@ from .calculations import CrossQuarterData
 from .const import (
     CONF_MODE,
     CONF_NAME,
+    CONF_NAMING,
     CROSS_QUARTER_ICONS,
     CROSS_QUARTER_PERIODS,
     DEVICE_CROSS_QUARTER,
     DOMAIN,
     ICON_NEXT_PERIOD_CHANGE,
+    NAMING_CELTIC,
     SENSOR_CURRENT_PERIOD,
     SENSOR_NEXT_PERIOD_CHANGE,
 )
@@ -113,6 +115,15 @@ class CrossQuarterSensor(
 
         # Set unique_id based on entry_id and sensor key
         self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
+
+        # The configured naming style selects the translation key for the
+        # period states: "system" uses the language-dependent descriptive
+        # names, "celtic" the language-independent Celtic festival names.
+        if (
+            description.key == SENSOR_CURRENT_PERIOD
+            and config_entry.data.get(CONF_NAMING) == NAMING_CELTIC
+        ):
+            self._attr_translation_key = f"{SENSOR_CURRENT_PERIOD}_celtic"
 
         # Fully English, language-independent entity_id (see FourSeasonsSensor).
         self.entity_id = ENTITY_ID_FORMAT.format(

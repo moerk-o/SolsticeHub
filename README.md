@@ -74,6 +74,19 @@ in Home Assistant's standard final step.
 Hemisphere mapping is handled automatically. For the full reasoning and the
 hemisphere/daylight-trend details, see [TECHNICAL_REFERENCE.md](TECHNICAL_REFERENCE.md).
 
+### Naming styles (Cross-Quarter and Chinese)
+
+The naming style controls how the current period/term is **displayed**; the
+underlying state value is always the English key (e.g. `imbolc`, `lichun`), so
+automations are unaffected.
+
+- **Cross-Quarter** — *System language*: descriptive names in your Home
+  Assistant language (e.g. "Winter Solstice", "Spring Cross-Quarter").
+  *Celtic*: the festival names (Imbolc, Beltane, …) in every language.
+- **Chinese Solar Terms** — *System language*: translated term names (e.g.
+  "Start of Spring"). *Pinyin*: Lìchūn, Yǔshuǐ, … *Hanzi*: 立春, 雨水, … —
+  both independent of the system language.
+
 ## Entities
 
 ### Shared sun-data sensors (on every device)

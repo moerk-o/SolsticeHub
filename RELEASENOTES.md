@@ -1,3 +1,25 @@
+### 🐞 Bug Fixes
+
+- **Naming style is now applied** ([#10](https://github.com/moerk-o/SolsticeHub/issues/10)):
+  The naming option chosen during setup was stored but never used — Cross-Quarter
+  always displayed the Celtic names and Chinese Solar Terms always the
+  system-language names, no matter what you selected.
+  - *System Language* (Cross-Quarter) now shows descriptive names in your Home
+    Assistant language, e.g. "Winter Solstice", "Spring Cross-Quarter".
+  - *Celtic Names* shows Imbolc, Beltane, … in every language.
+  - *Pinyin* and *Hanzi* (Chinese Solar Terms) now show Lìchūn, Yǔshuǐ, … or
+    立春, 雨水, … as selected.
+  - Sensor **state values are unchanged** (always the English keys like `imbolc`
+    or `lichun`), so automations and dashboards keep working. Only the displayed
+    names change — if you had picked *System Language* on a Cross-Quarter device,
+    you will see the new descriptive names after updating.
+
+**Full Changelog**: https://github.com/moerk-o/SolsticeHub/compare/v2.0.0...v2.0.1
+
+---
+
+# v2.0.0
+
 > ## ⚠️ Please read before updating — manual step required
 >
 > **SolsticeHub is the renamed successor of *Solstice Season*.** Because the

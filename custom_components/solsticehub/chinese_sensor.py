@@ -26,11 +26,14 @@ from .const import (
     CHINESE_MAJOR_TERMS,
     CHINESE_TERM_NAMES,
     CONF_NAME,
+    CONF_NAMING,
     CONF_SCOPE,
     DEVICE_CHINESE,
     DOMAIN,
     ICON_CHINESE_TERM,
     ICON_NEXT_TERM_CHANGE,
+    NAMING_HANZI,
+    NAMING_PINYIN,
     SCOPE_8_MAJOR,
     SENSOR_CURRENT_TERM,
     SENSOR_NEXT_TERM_CHANGE,
@@ -123,6 +126,16 @@ class ChineseSolarTermsSensor(
 
         # Set unique_id based on entry_id and sensor key
         self._attr_unique_id = f"{config_entry.entry_id}_{description.key}"
+
+        # The configured naming style selects the translation key for the
+        # term states: "system" uses the language-dependent descriptive names,
+        # "pinyin"/"hanzi" the language-independent Chinese names.
+        naming = config_entry.data.get(CONF_NAMING)
+        if description.key == SENSOR_CURRENT_TERM and naming in (
+            NAMING_PINYIN,
+            NAMING_HANZI,
+        ):
+            self._attr_translation_key = f"{SENSOR_CURRENT_TERM}_{naming}"
 
         # Fully English, language-independent entity_id (see FourSeasonsSensor).
         self.entity_id = ENTITY_ID_FORMAT.format(

@@ -123,14 +123,27 @@
       "current_period": {
         "name": "Current Period",
         "state": {
+          "yule": "Winter Solstice",
+          "imbolc": "Winter Cross-Quarter",
+          "ostara": "Spring Equinox",
+          "beltane": "Spring Cross-Quarter",
+          "litha": "Summer Solstice",
+          "lughnasadh": "Summer Cross-Quarter",
+          "mabon": "Autumn Equinox",
+          "samhain": "Autumn Cross-Quarter"
+        }
+      },
+      "current_period_celtic": {
+        "name": "Current Period",
+        "state": {
+          "yule": "Yule",
           "imbolc": "Imbolc",
           "ostara": "Ostara",
           "beltane": "Beltane",
           "litha": "Litha",
           "lughnasadh": "Lughnasadh",
           "mabon": "Mabon",
-          "samhain": "Samhain",
-          "yule": "Yule"
+          "samhain": "Samhain"
         }
       },
       "next_period_change": {
@@ -163,6 +176,64 @@
           "xiaoxue": "Minor Snow",
           "daxue": "Major Snow",
           "dongzhi": "Winter Solstice"
+        }
+      },
+      "current_term_pinyin": {
+        "name": "Current Solar Term",
+        "state": {
+          "lichun": "Lìchūn",
+          "yushui": "Yǔshuǐ",
+          "jingzhe": "Jīngzhé",
+          "chunfen": "Chūnfēn",
+          "qingming": "Qīngmíng",
+          "guyu": "Gǔyǔ",
+          "lixia": "Lìxià",
+          "xiaoman": "Xiǎomǎn",
+          "mangzhong": "Mángzhòng",
+          "xiazhi": "Xiàzhì",
+          "xiaoshu": "Xiǎoshǔ",
+          "dashu": "Dàshǔ",
+          "liqiu": "Lìqiū",
+          "chushu": "Chǔshǔ",
+          "bailu": "Báilù",
+          "qiufen": "Qiūfēn",
+          "hanlu": "Hánlù",
+          "shuangjiang": "Shuāngjiàng",
+          "lidong": "Lìdōng",
+          "xiaoxue": "Xiǎoxuě",
+          "daxue": "Dàxuě",
+          "dongzhi": "Dōngzhì",
+          "xiaohan": "Xiǎohán",
+          "dahan": "Dàhán"
+        }
+      },
+      "current_term_hanzi": {
+        "name": "Current Solar Term",
+        "state": {
+          "lichun": "立春",
+          "yushui": "雨水",
+          "jingzhe": "惊蛰",
+          "chunfen": "春分",
+          "qingming": "清明",
+          "guyu": "谷雨",
+          "lixia": "立夏",
+          "xiaoman": "小满",
+          "mangzhong": "芒种",
+          "xiazhi": "夏至",
+          "xiaoshu": "小暑",
+          "dashu": "大暑",
+          "liqiu": "立秋",
+          "chushu": "处暑",
+          "bailu": "白露",
+          "qiufen": "秋分",
+          "hanlu": "寒露",
+          "shuangjiang": "霜降",
+          "lidong": "立冬",
+          "xiaoxue": "小雪",
+          "daxue": "大雪",
+          "dongzhi": "冬至",
+          "xiaohan": "小寒",
+          "dahan": "大寒"
         }
       },
       "next_term_change": {
